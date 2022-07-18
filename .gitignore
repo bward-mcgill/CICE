@@ -12,5 +12,10 @@ doc/build
 # Ignore testsuite file/directories
 testsuite*
 caselist*
+
+
+#Ignore work, input and output directories
 icepack/*
-twim*
+work
+inp
+out

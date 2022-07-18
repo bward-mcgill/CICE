@@ -6,6 +6,7 @@
 
 CPPDEFS    := -DFORTRANUNDERSCORE ${ICE_CPPDEFS}
 CFLAGS     := -c -O2 -fp-model precise
+#LDFLAGS    := -L/usr/lib64/
 #-xHost
 
 FREEFLAGS  := -FR
@@ -34,7 +35,7 @@ endif
 LD:= $(FC)
 
 ifeq ($(ICE_THREADED), true) 
-   LDFLAGS += -qopenmp 
-   CFLAGS += -qopenmp 
+   LDFLAGS += -qopenmp
+   CFLAGS += -qopenmp
    FFLAGS += -qopenmp 
 endif
