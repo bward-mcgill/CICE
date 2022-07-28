@@ -1,3 +1,4 @@
+ice_ic = 'internal'
 dt = 3600.0
 npt            = 1
 dxrect         = 25.e4
@@ -17,6 +18,7 @@ fyear_init      = 2005
 atm_data_format = 'nc'
 atm_data_type   = 'default'
 atm_data_dir    = 'default'
+ocn_data_type = 'calm'
 ocn_data_format = 'nc'
 ocn_data_dir    = 'default'
 ice_data_type = 'wim2p5'
