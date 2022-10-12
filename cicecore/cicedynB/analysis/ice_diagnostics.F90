@@ -1752,13 +1752,13 @@
 ! author: Elizabeth C. Hunke, LANL
 
       subroutine print_state(plabel,i,j,iblk)
-
       use ice_grid, only: grid_ice
       use ice_blocks, only: block, get_block
       use ice_domain, only: blocks_ice
       use ice_domain_size, only: ncat, nilyr, nslyr, nfsd
       use ice_state, only: aice0, aicen, vicen, vsnon, uvel, vvel, &
                            uvelE, vvelE, uvelN, vvelN, trcrn
+      use ice_arrays_column, only : d_afsd_newi, d_afsd_latm, d_afsd_latg, d_afsd_weld, d_afsd_wave
       use ice_flux, only: uatm, vatm, potT, Tair, Qa, flw, frain, fsnow, &
           fsens, flat, evap, flwout, swvdr, swvdf, swidr, swidf, rhoa, &
           frzmlt, sst, sss, Tf, Tref, Qref, Uref, uocn, vocn, strtltx, strtlty
@@ -1809,10 +1809,16 @@
                         this_block%j_glob(j) 
       write(nu_diag,*) ' '
       write(nu_diag,*) 'aice0', aice0(i,j,iblk)
+      if (tr_fsd) write(nu_diag,*) 'dafsd_newi',d_afsd_newi(i,j,:,iblk) ! fsd
+      if (tr_fsd) write(nu_diag,*) 'dafsd_latg',d_afsd_latg(i,j,:,iblk) ! fsd
+      if (tr_fsd) write(nu_diag,*) 'dafsd_latm',d_afsd_latm(i,j,:,iblk) ! fsd
+      if (tr_fsd) write(nu_diag,*) 'dafsd_weld',d_afsd_weld(i,j,:,iblk) ! fsd
+      if (tr_fsd) write(nu_diag,*) 'dafsd_wave',d_afsd_wave(i,j,:,iblk) ! fsd
       do n = 1, ncat
          write(nu_diag,*) ' '
          write(nu_diag,*) 'n =',n
          write(nu_diag,*) 'aicen', aicen(i,j,n,iblk)
+         write(nu_diag,*) 'sum afsdn for that categorie', sum(trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk))
          write(nu_diag,*) 'vicen', vicen(i,j,n,iblk)
          write(nu_diag,*) 'vsnon', vsnon(i,j,n,iblk)
          if (aicen(i,j,n,iblk) > puny) then
@@ -1820,7 +1826,7 @@
             write(nu_diag,*) 'hsn', vsnon(i,j,n,iblk)/aicen(i,j,n,iblk)
          endif
          write(nu_diag,*) 'Tsfcn',trcrn(i,j,nt_Tsfc,n,iblk)
-         if (tr_fsd) write(nu_diag,*) 'afsdn',trcrn(i,j,nt_fsd,n,iblk) ! fsd cat 1
+         if (tr_fsd) write(nu_diag,*) 'afsdn',trcrn(i,j,24:35,n,iblk) ! fsd
 ! layer 1 diagnostics
 !         if (tr_iso)  write(nu_diag,*) 'isosno',trcrn(i,j,nt_isosno,n,iblk) ! isotopes in snow
 !         if (tr_iso)  write(nu_diag,*) 'isoice',trcrn(i,j,nt_isoice,n,iblk) ! isotopes in ice
@@ -1829,12 +1835,12 @@
          write(nu_diag,*) ' '
 
 ! dynamics (transport and/or ridging) causes the floe size distribution to become non-normal
-!         if (tr_fsd) then
-!         if (abs(sum(trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk))-c1) > puny) &
-!            write(nu_diag,*) 'afsdn not normal', &
-!                 sum(trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk)), &
-!                     trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk)
-!         endif
+         if (tr_fsd) then
+         if (abs(sum(trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk))-c1) > puny) &
+            write(nu_diag,*) 'afsdn not normal', &
+                 sum(trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk)), &
+                     trcrn(i,j,nt_fsd:nt_fsd+nfsd-1,n,iblk)
+         endif
 
       enddo                     ! n
 

@@ -49,7 +49,7 @@
       implicit none
       private
       public :: init_forcing_atmo, init_forcing_ocn, alloc_forcing, &
-                get_forcing_atmo, get_forcing_ocn, get_wave_spec, &
+                get_forcing_atmo, get_forcing_ocn, get_wave_spec, get_wrs, &
                 read_clim_data, read_clim_data_nc, &
                 interpolate_data, interp_coeff_monthly, &
                 read_data_nc_point, interp_coeff, &
@@ -102,6 +102,8 @@
            wind_data, &
           strax_data, &
           stray_data, &
+!         strwvx_data, & 
+!         strwvy_data, &
              Qa_data, &
            rhoa_data, &
             flw_data, &
@@ -131,8 +133,9 @@
          precip_units     ! 'mm_per_month', 'mm_per_sec', 'mks','m_per_sec'
 
       logical (kind=log_kind), public :: &
-         rotate_wind      ! rotate wind/stress to computational grid from true north directed
- 
+         rotate_wind , &  ! rotate wind/stress to computational grid from true north directed
+         add_strwave      ! Read radiation stress in wave file and add it to air drag.
+
       character(char_len_long), public :: & 
          atm_data_dir , & ! top directory for atmospheric data
          ocn_data_dir , & ! top directory for ocean data
@@ -215,7 +218,9 @@
            wind_data(nx_block,ny_block,2,max_blocks), &
           strax_data(nx_block,ny_block,2,max_blocks), &
           stray_data(nx_block,ny_block,2,max_blocks), &
-             Qa_data(nx_block,ny_block,2,max_blocks), &
+!          strwvx_data(nx_block,ny_block,2,max_blocks), & 
+!          strwvy_data(nx_block,ny_block,2,max_blocks), &
+           Qa_data(nx_block,ny_block,2,max_blocks), &
            rhoa_data(nx_block,ny_block,2,max_blocks), &
             flw_data(nx_block,ny_block,2,max_blocks), &
             sst_data(nx_block,ny_block,2,max_blocks), &
@@ -235,7 +240,6 @@
 ! initialize this, not set in box2001 (and some other forcings?)
 
       cldf = c0
-
       end subroutine alloc_forcing
 
 !=======================================================================
@@ -1777,7 +1781,6 @@
       endif
 
       if (calc_strair) then
-
         if (rotate_wind) then
           do j = jlo, jhi
           do i = ilo, ihi
@@ -5460,30 +5463,49 @@
 
       end subroutine box2001_data_ocn
 
-!=======================================================================
-!
       subroutine uniform_data_atm(dir,spd)
-!     uniform wind fields in some direction
 
+!     uniform wind fields in some direction 
       use ice_domain, only: nblocks
+      use ice_grid, only: hm !test
       use ice_domain_size, only: max_blocks
       use ice_blocks, only: nx_block, ny_block, nghost
       use ice_flux, only: uatm, vatm, wind, rhoa, strax, stray
+      use ice_flux, only: strwavex, strwavey !test
       use ice_state, only: aice
+
+      integer (kind=int_kind), parameter :: max_d = 6 !test
+      real (kind=dbl_kind) :: fsurfn_d(max_d)
+      data fsurfn_d    /  0.20_dbl_kind, 0.15_dbl_kind, 0.10_dbl_kind, & !test
+                          0.05_dbl_kind, 0.01_dbl_kind, 0.01_dbl_kind /  !test
+      integer (kind=int_kind) :: n !test
 
       character(len=*), intent(in) :: dir
       real(kind=dbl_kind), intent(in), optional :: spd ! velocity
 
-      ! local parameters
+      logical (kind=log_kind) :: wave_spec !test
+      character (char_len) :: fieldname    !test
+      character(char_len) :: wave_spec_type
 
+      ! local parameters
       integer (kind=int_kind) :: &
          iblk, i,j           ! loop indices
+
+      integer (kind=int_kind) :: &
+         fid, &                  ! file id for netCDF routines
+         k , &
+         iTest, jTest    , &
+         iblkTest            ! block index
 
       real (kind=dbl_kind) :: &
          tau, &
          atm_val ! value to use for atm speed
 
       character(len=*), parameter :: subname = '(uniform_data_atm)'
+
+      call icepack_query_parameters(add_strwave_out=add_strwave) !Test
+      call icepack_query_parameters(wave_spec_out=wave_spec, &
+                                  wave_spec_type_out=wave_spec_type)
 
       if (local_debug .and. my_task == master_task) write(nu_diag,*) subname,'fdbg start'
 
@@ -5515,24 +5537,53 @@
               file=__FILE__, line=__LINE__)
       endif
 
+!     ! Wave stress
+!     if (add_strwave .and. wave_spec) then
+!        call ice_open_nc(wave_spec_file,fid)
+!        fieldname = 'strwvx'
+!        call ice_read_nc(fid,1,fieldname,strwavex,local_debug,field_loc=field_loc_center,field_type=field_type_scalar)
+!        strwavey(:,:,:)=c0
+!
+!        !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+!        do iblkTest = 1, nblocks
+!           do jTest = 1, ny_block
+!              do iTest = 1, nx_block
+!                 strwavex(iTest,jTest,iblkTest) = strwavex(iTest,jTest,iblkTest) * hm(iTest,jTest,iblkTest)
+!                strwavey(iTest,jTest,iblkTest) = strwavey(iTest,jTest,iblkTest) * hm(iTest,jTest,iblkTest)
+!              enddo
+!           enddo
+!        enddo  ! iblk
+!        !$OMP END PARALLEL DO
+!        call ice_close_nc(fid)
+!     endif
+
       do iblk = 1, nblocks
          do j = 1, ny_block   
          do i = 1, nx_block   
-
             ! wind stress
             wind(i,j,iblk) = sqrt(uatm(i,j,iblk)**2 + vatm(i,j,iblk)**2)
             tau = rhoa(i,j,iblk) * 0.0012_dbl_kind * wind(i,j,iblk)
-            strax(i,j,iblk) = aice(i,j,iblk) * tau * uatm(i,j,iblk)
-            stray(i,j,iblk) = aice(i,j,iblk) * tau * vatm(i,j,iblk)
-            
+!            if (add_strwave) then
+!                strax(i,j,iblk) = strwavex(i,j,iblk)
+!                stray(i,j,iblk) = strwavey(i,j,iblk)
+!            else
+                 strax(i,j,iblk) = aice(i,j,iblk) * tau * uatm(i,j,iblk)
+                 stray(i,j,iblk) = aice(i,j,iblk) * tau * vatm(i,j,iblk)
+!                strax(i,j,iblk) = c0
+!                strax(i,j,iblk) = c0
+!            endif
          enddo
-         enddo  
+         enddo
       enddo ! nblocks
 
-      end subroutine uniform_data_atm
-!=======================================================================
+!      do jTest = 50, ny_block
+!          write(*,*) "strwavex in forcing", SUM(strwavex(:,jTest,1),DIM=1)
+!          write(*,*) "strax in forcing", SUM(strax(:,jTest,1),DIM=1)
+!      enddo
 
-!
+      end subroutine uniform_data_atm
+
+
       subroutine uniform_data_ocn(dir,spd)
 
 !     uniform current fields in some direction
@@ -5580,10 +5631,58 @@
       endif
 
       end subroutine uniform_data_ocn
-!=======================================================================
+
+      subroutine get_wrs
+      use ice_domain, only: nblocks
+      use ice_grid, only: hm
+      use ice_blocks, only: nx_block, ny_block
+      use ice_flux, only: strwavex, strwavey
+
+      logical (kind=log_kind) :: wave_spec
+      character (char_len) :: fieldname
+      character(char_len) :: wave_spec_type
+
+      ! local parameters
+      integer (kind=int_kind) :: &
+         iblk, i,j           ! loop indices
+
+      integer (kind=int_kind) :: &
+         fid, &                  ! file id for netCDF routines
+         k
+
+      character(len=*), parameter :: subname = '(get_wrs)'
+
+      call icepack_query_parameters(add_strwave_out=add_strwave)
+      call icepack_query_parameters(wave_spec_out=wave_spec, &
+                                  wave_spec_type_out=wave_spec_type)
+     ! Wave stress
+     if (add_strwave .and. wave_spec) then
+        call ice_open_nc(wave_spec_file,fid)
+        fieldname = 'strwvx'
+        call ice_read_nc(fid,1,fieldname,strwavex,local_debug,field_loc=field_loc_center,field_type=field_type_scalar)
+
+        call ice_open_nc(wave_spec_file,fid)
+        fieldname = 'strwvy'
+        call ice_read_nc(fid,1,fieldname,strwavey,local_debug,field_loc=field_loc_center,field_type=field_type_scalar)
+
+        !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+        do iblk = 1, nblocks
+           do j = 1, ny_block
+              do i = 1, nx_block
+                 strwavex(i,j,iblk) = strwavex(i,j,iblk) * hm(i,j,iblk)
+                 strwavey(i,j,iblk) = strwavey(i,j,iblk) * hm(i,j,iblk)
+              enddo
+           enddo
+        enddo  ! iblk
+        !$OMP END PARALLEL DO
+        call ice_close_nc(fid)
+      endif
+      !do j = 50, ny_block
+      !    write(*,*) "strwavex in get_wrs", SUM(strwavex(:,j,1),DIM=1)
+      !enddo
+      end subroutine get_wrs
 
       subroutine get_wave_spec
-  
       use ice_read_write, only: ice_read_nc_xyf
       use ice_arrays_column, only: wave_spectrum, wave_sig_ht, &
                                    dwavefreq, wavefreq
@@ -5594,7 +5693,7 @@
       ! local variables
       integer (kind=int_kind) :: &
          fid, &                  ! file id for netCDF routines
-         k
+         k  
 
       real(kind=dbl_kind), dimension(nfreq) :: &
          wave_spectrum_profile  ! wave spectrum
@@ -5602,6 +5701,7 @@
       character(char_len) :: wave_spec_type
       logical (kind=log_kind) :: wave_spec
       character(len=*), parameter :: subname = '(get_wave_spec)'
+      character (char_len) :: fieldname    ! field name in netcdf file
 
       if (local_debug .and. my_task == master_task) write(nu_diag,*) subname,'fdbg start'
 
@@ -5609,6 +5709,7 @@
 
       call icepack_query_parameters(wave_spec_out=wave_spec, &
                                     wave_spec_type_out=wave_spec_type)
+      call icepack_query_parameters(add_strwave_out=add_strwave)
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
@@ -5636,7 +5737,6 @@
                call ice_open_nc(wave_spec_file,fid)
                call ice_read_nc_xyf (fid, 1, 'efreq', wave_spectrum(:,:,:,:), debug_forcing, &
                                      field_loc_center, field_type_scalar)
-               call ice_close_nc(fid)
 #else
                write (nu_diag,*) "wave spectrum file not available, requires cpp USE_NETCDF"
                write (nu_diag,*) "wave spectrum file not available, using default profile"
@@ -5648,10 +5748,8 @@
       endif
 
       call ice_timer_stop(timer_fsd)
-
       end subroutine get_wave_spec
 
-!=======================================================================
 
 ! initial snow aging lookup table
 !

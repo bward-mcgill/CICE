@@ -42,7 +42,8 @@
        ! in from atmos (if .not.calc_strair)  
          strax   , & ! wind stress components (N/m^2), on grid_atm_dynu
          stray   , & !                                 on grid_atm_dynv
-
+         strwavex , & !Wave stress
+         strwavey , & 
        ! in from ocean
          uocn    , & ! ocean current, x-direction (m/s),     on grid_ocn_dynu
          vocn    , & ! ocean current, y-direction (m/s),     on grid_ocn_dynv
@@ -394,6 +395,8 @@
       allocate( &
          strax      (nx_block,ny_block,max_blocks), & ! wind stress components (N/m^2)
          stray      (nx_block,ny_block,max_blocks), & ! 
+         strwavex   (nx_block,ny_block,max_blocks), & ! wave stress components (N/m^2)
+         strwavey   (nx_block,ny_block,max_blocks), & !
          uocn       (nx_block,ny_block,max_blocks), & ! ocean current, x-direction (m/s)
          vocn       (nx_block,ny_block,max_blocks), & ! ocean current, y-direction (m/s)
          ss_tltx    (nx_block,ny_block,max_blocks), & ! sea surface slope, x-direction (m/m)
@@ -664,8 +667,11 @@
       rhoa  (:,:,:) = 1.3_dbl_kind    ! air density (kg/m^3)
       uatm  (:,:,:) = c5              ! wind velocity    (m/s)
       vatm  (:,:,:) = c5
-      strax (:,:,:) = 0.05_dbl_kind
-      stray (:,:,:) = 0.05_dbl_kind
+      !strax (:,:,:) = 0.05_dbl_kind
+      !stray (:,:,:) = 0.05_dbl_kind
+      strax (:,:,:) = c0 !test
+      stray (:,:,:) = c0 !test
+
       fsnow (:,:,:) = c0              ! snowfall rate (kg/m2/s)
                                       ! fsnow must be 0 for exact restarts
       if (trim(default_season) == 'winter') then
@@ -757,7 +763,8 @@
 
       strairxT(:,:,:) = c0            ! wind stress, T grid
       strairyT(:,:,:) = c0
-
+      strwavex(:,:,:) = c0
+      strwavey(:,:,:) = c0
       fsens   (:,:,:) = c0
       flat    (:,:,:) = c0
       fswabs  (:,:,:) = c0

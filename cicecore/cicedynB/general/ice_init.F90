@@ -151,7 +151,7 @@
         tfrz_option, frzpnd, atmbndy, wave_spec_type, snwredist, snw_aging_table, &
         capping_method
 
-      logical (kind=log_kind) :: calc_Tsfc, formdrag, highfreq, calc_strair, wave_spec, &
+      logical (kind=log_kind) :: calc_Tsfc, formdrag, highfreq, calc_strair, add_strwave, wave_spec, &
         sw_redist, calc_dragio, use_smliq_pnd, snwgrain
 
       logical (kind=log_kind) :: tr_iage, tr_FY, tr_lvl, tr_pond
@@ -260,7 +260,7 @@
         oceanmixed_ice, restore_ice,     restore_ocn,   trestore,       &
         precip_units,   default_season,  wave_spec_type,nfreq,          &
         atm_data_type,  ocn_data_type,   bgc_data_type, fe_data_type,   &
-        ice_data_type,  ice_data_conc,   ice_data_dist,                 &
+        ice_data_type,  ice_data_conc,   ice_data_dist, add_strwave,    &
         fyear_init,     ycycle,          wave_spec_file,restart_coszen, &
         atm_data_dir,   ocn_data_dir,    bgc_data_dir,                  &
         atm_data_format, ocn_data_format, rotate_wind,                  &
@@ -480,6 +480,7 @@
       atm_data_dir    = ' '
       rotate_wind     = .true.    ! rotate wind/stress composants to computational grid orientation
       calc_strair     = .true.    ! calculate wind stress
+      add_strwave     = .false.   ! Add wave radiation stress vector to air drag.
       formdrag        = .false.   ! calculate form drag
       highfreq        = .false.   ! calculate high frequency RASM coupling
       natmiter        = 5         ! number of iterations for atm boundary layer calcs
@@ -946,6 +947,7 @@
       call broadcast_scalar(atm_data_dir,         master_task)
       call broadcast_scalar(rotate_wind,          master_task)
       call broadcast_scalar(calc_strair,          master_task)
+      call broadcast_scalar(add_strwave,          master_task)
       call broadcast_scalar(calc_Tsfc,            master_task)
       call broadcast_scalar(formdrag,             master_task)
       call broadcast_scalar(highfreq,             master_task)
@@ -1933,6 +1935,7 @@
          write(nu_diag,*) '--------------------------------'
          write(nu_diag,1010) ' calc_Tsfc        = ', calc_Tsfc,' : calculate surface temperature as part of thermo'
          write(nu_diag,1010) ' calc_strair      = ', calc_strair,' : calculate wind stress and speed'
+         write(nu_diag,1010) ' add_strwave	= ', add_strwave,' : add wave radiation stress to air stress'
          write(nu_diag,1010) ' rotate_wind      = ', rotate_wind,' : rotate wind/stress to computational grid'
          write(nu_diag,1010) ' formdrag         = ', formdrag,' : use form drag parameterization'
          write(nu_diag,1000) ' iceruf           = ', iceruf, ' : ice surface roughness at atmosphere interface (m)'
@@ -2362,7 +2365,7 @@
          ahmax_in=ahmax, shortwave_in=shortwave, albedo_type_in=albedo_type, R_ice_in=R_ice, R_pnd_in=R_pnd, &
          R_snw_in=R_snw, dT_mlt_in=dT_mlt, rsnw_mlt_in=rsnw_mlt, &
          kstrength_in=kstrength, krdg_partic_in=krdg_partic, krdg_redist_in=krdg_redist, mu_rdg_in=mu_rdg, &
-         atmbndy_in=atmbndy, calc_strair_in=calc_strair, formdrag_in=formdrag, highfreq_in=highfreq, &
+         atmbndy_in=atmbndy, calc_strair_in=calc_strair, add_strwave_in=add_strwave, formdrag_in=formdrag, highfreq_in=highfreq, &
          kitd_in=kitd, kcatbound_in=kcatbound, hs0_in=hs0, dpscale_in=dpscale, frzpnd_in=frzpnd, &
          rfracmin_in=rfracmin, rfracmax_in=rfracmax, pndaspect_in=pndaspect, hs1_in=hs1, hp1_in=hp1, &
          ktherm_in=ktherm, calc_Tsfc_in=calc_Tsfc, conduct_in=conduct, &

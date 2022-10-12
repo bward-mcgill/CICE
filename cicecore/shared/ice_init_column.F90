@@ -2,6 +2,7 @@
 !
 ! Initialization routines for the column package.
 !
+!
 ! author: Elizabeth C. Hunke, LANL
 !
       module ice_init_column
@@ -684,7 +685,7 @@
             floe_rad_c,    &  ! fsd size bin centre in m (radius)
             floe_binwidth, &  ! fsd size bin width in m (radius)
             afsd)             ! floe size distribution
-
+         !write(*,*) "afsd in init_fsd() in ice_init_column.F90, just after call icepack_init_fsd() (afsd(:))", afsd(:)
          do iblk = 1, max_blocks
             do j = 1, ny_block
             do i = 1, nx_block
@@ -710,7 +711,10 @@
             file=__FILE__, line=__LINE__)
 
       endif ! tr_fsd
-
+      !write(*,*) "afsdn just before its assignation in floesize in the init_fsd(), ice_init_column.F90 (afsdn(:,1)).", afsdn(:,1)
+      !write(*,*) "afsdn just before its assignation in floesize in the init_fsd(), ice_init_column.F90 (afsdn(:,2)).", afsdn(:,2)
+      !write(*,*) "floesize variable at the end of init_fsd() in ice_init_column.F90 (floesize(:,:,:,1,:))", floesize(20,25,:,1,3)
+      !write(*,*) "floesize variable at the end of init_fsd() in ice_init_column.F90 (floesize(:,:,:,2,:))", floesize(20,25,:,2,3)
       end subroutine init_fsd
 
 !=======================================================================

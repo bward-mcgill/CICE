@@ -648,7 +648,6 @@
       ihi = this_block%ihi
       jlo = this_block%jlo
       jhi = this_block%jhi
-
       do j = jlo, jhi
       do i = ilo, ihi
 
@@ -657,7 +656,6 @@
          ! significant wave height for FSD
          if (tr_fsd) &
          wave_sig_ht(i,j,iblk) = c4*SQRT(SUM(wave_spectrum(i,j,:,iblk)*dwavefreq(:)))
-
          call icepack_step_therm2(dt=dt, ncat=ncat, &
                       nltrcr=nltrcr, nilyr=nilyr, nslyr=nslyr, nblyr=nblyr, &
                       hin_max    = hin_max   (:),          &   

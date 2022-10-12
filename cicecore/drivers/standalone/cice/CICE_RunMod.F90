@@ -47,14 +47,14 @@
 
       use ice_calendar, only: istep, istep1, dt, stop_now, advance_timestep
       use ice_forcing, only: get_forcing_atmo, get_forcing_ocn, &
-          get_wave_spec
+          get_wave_spec, get_wrs
       use ice_forcing_bgc, only: get_forcing_bgc, get_atm_bgc, &
           fiso_default, faero_default
       use ice_flux, only: init_flux_atm, init_flux_ocn
       use ice_timers, only: ice_timer_start, ice_timer_stop, &
           timer_couple, timer_step
       logical (kind=log_kind) :: &
-          tr_iso, tr_aero, tr_zaero, skl_bgc, z_tracers, wave_spec, tr_fsd
+          tr_iso, tr_aero, tr_zaero, skl_bgc, z_tracers, wave_spec, tr_fsd, add_strwave
       character(len=*), parameter :: subname = '(CICE_Run)'
 
    !--------------------------------------------------------------------
@@ -65,7 +65,7 @@
 
       call icepack_query_parameters(skl_bgc_out=skl_bgc, &
                                     z_tracers_out=z_tracers, &
-                                    wave_spec_out=wave_spec)
+                                    wave_spec_out=wave_spec, add_strwave_out=add_strwave)
       call icepack_query_tracer_flags(tr_iso_out=tr_iso, &
                                       tr_aero_out=tr_aero, &
                                       tr_zaero_out=tr_zaero, &
@@ -78,14 +78,12 @@
    !--------------------------------------------------------------------
    ! timestep loop
    !--------------------------------------------------------------------
-
       timeLoop: do
 #endif
 
          call ice_step
-
 ! tcraig, use advance_timestep now
-!         istep  = istep  + 1    ! update time step counters
+         istep  = istep  + 1    ! update time step counters
 !         istep1 = istep1 + 1
 !         time = time + dt       ! determine the time and date
 !         call calendar(time)    ! at the end of the timestep
@@ -97,6 +95,10 @@
 
          call ice_timer_start(timer_couple)  ! atm/ocn coupling
 
+
+         if (add_strwave .and. wave_spec) then
+             call get_wrs
+         endif
 ! for now, wave_spectrum is constant in time
 !         if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
          call get_forcing_atmo     ! atmospheric forcing from data

@@ -85,7 +85,7 @@
       use ice_flux, only: rdg_conv, rdg_shear, strairxT, strairyT, &
           strairx, strairy, uocn, vocn, ss_tltx, ss_tlty, iceumask, fm, &
           strtltx, strtlty, strocnx, strocny, strintx, strinty, taubx, tauby, &
-          strocnxT, strocnyT, strax, stray, &
+          strocnxT, strocnyT, strax, stray, strwavex, strwavey, &
           Tbu, hwater, &
           strairxN, strairyN, icenmask, fmN, &
           strtltxN, strtltyN, strocnxN, strocnyN, strintxN, strintyN, taubxN, taubyN, &
@@ -126,7 +126,7 @@
          ksub           , & ! subcycle step
          iblk           , & ! block index
          ilo,ihi,jlo,jhi, & ! beginning and end of physical domain
-         i, j, ij           ! local indices
+         i, j, ij, iTest, jTest           ! local indices
 
       integer (kind=int_kind), dimension(max_blocks) :: &
          icellt   , & ! no. of cells where icetmask = 1
@@ -152,6 +152,8 @@
          tmass    , & ! total mass of ice and snow (kg/m^2)
          waterx   , & ! for ocean stress calculation, x (m/s)
          watery   , & ! for ocean stress calculation, y (m/s)
+         wavex    , & ! Wave radiation stress, x (m2/s2)
+         wavey    , & ! Wave radiation stress, y (m2/s2)
          forcex   , & ! work array: combined atm stress and ocn tilt, x
          forcey   , & ! work array: combined atm stress and ocn tilt, y
          aiu      , & ! ice fraction on u-grid
@@ -165,11 +167,16 @@
          ss_tltyN , & ! sea surface slope, y-direction (m/m)
          waterxN  , & ! for ocean stress calculation, x (m/s)
          wateryN  , & ! for ocean stress calculation, y (m/s)
+         wavexN    , & ! Wave radiation stress, x (m2/s2)
+         waveyN    , & ! Wave radiation stress, y (m2/s2)
          forcexN  , & ! work array: combined atm stress and ocn tilt, x
          forceyN  , & ! work array: combined atm stress and ocn tilt, y
          aiN      , & ! ice fraction on N-grid
          nmass    , & ! total mass of ice and snow (N grid)
-         nmassdti     ! mass of N-cell/dte (kg/m^2 s)
+         nmassdti  ! mass of N-cell/dte (kg/m^2 s)
+
+      real (kind=dbl_kind) :: &
+           rhow  ! Sea water density
 
       real (kind=dbl_kind), dimension (nx_block,ny_block,max_blocks) :: &
          uocnE    , & ! i ocean current (m/s)
@@ -178,6 +185,8 @@
          ss_tltyE , & ! sea surface slope, y-direction (m/m)
          waterxE  , & ! for ocean stress calculation, x (m/s)
          wateryE  , & ! for ocean stress calculation, y (m/s)
+         wavexE    , & ! Wave radiation stress, x (m2/s2)
+         waveyE    , & ! Wave radiation stress, y (m2/s2)
          forcexE  , & ! work array: combined atm stress and ocn tilt, x
          forceyE  , & ! work array: combined atm stress and ocn tilt, y
          aiE      , & ! ice fraction on E-grid
@@ -204,7 +213,9 @@
          strtmp       ! stress combinations for momentum equation
 
       logical (kind=log_kind) :: &
-         calc_strair  ! calculate air/ice stress
+         calc_strair, &  ! calculate air/ice stress
+         add_strwave, &
+         wave_spec
 
       integer (kind=int_kind), dimension (nx_block,ny_block,max_blocks) :: &
          icetmask, &  ! ice extent mask (T-cell)
@@ -347,7 +358,7 @@
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
 
-      if (.not. calc_strair) then
+     if (.not. calc_strair) then
          call grid_average_X2Y('F', strax, grid_atm_dynu, strairx, 'U')
          call grid_average_X2Y('F', stray, grid_atm_dynv, strairy, 'U')
       else
@@ -371,6 +382,36 @@
             call grid_average_X2Y('F', strairxT, 'T'          , strairxE, 'E')
             call grid_average_X2Y('F', strairyT, 'T'          , strairyE, 'E')
          endif
+      endif
+
+      call icepack_query_parameters(add_strwave_out=add_strwave, wave_spec_out=wave_spec)
+      call icepack_query_parameters(rhow_out=rhow)
+
+      if (add_strwave .and. wave_spec) then
+          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavex, 'U')
+          call grid_average_X2Y('F', strwavey, grid_atm_dynv, wavey, 'U')
+          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavexN, 'N')
+          call grid_average_X2Y('F', strwavey, grid_atm_dynv, waveyN, 'N')
+          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavexE, 'E')
+          call grid_average_X2Y('F', strwavey, grid_atm_dynv, waveyE, 'E')
+
+          !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+          do iblk = 1, nblocks
+            do j = 1, ny_block
+               do i = 1, nx_block
+                 strairx(i,j,iblk) = strairx(i,j,iblk) + wavex(i,j,iblk)*rhow
+                 strairy(i,j,iblk) = strairy(i,j,iblk) + wavey(i,j,iblk)*rhow
+               enddo
+            enddo
+         enddo  ! iblk
+         !$OMP END PARALLEL DO
+
+          if (grid_ice == 'CD' .or. grid_ice == 'C') then
+             strairxN = strairxN + wavexN
+             strairxN = strairyN + waveyN
+             strairxE = strairxE + wavexE
+             strairxE = strairyE + waveyE
+          endif
       endif
 
       !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,ij,i,j) SCHEDULE(runtime)
@@ -791,6 +832,7 @@
                   !-----------------------------------------------------------------
                   ! momentum equation
                   !-----------------------------------------------------------------
+
                   call stepu (nx_block           , ny_block          , &
                               icellu       (iblk), Cdn_ocn (:,:,iblk), &
                               indxui     (:,iblk), indxuj    (:,iblk), &

@@ -301,7 +301,7 @@
          wavefreq,      &  ! wave frequencies
          dwavefreq         ! wave frequency bin widths
 
-      real (kind=dbl_kind), dimension (:,:,:,:), allocatable, public :: &
+      real (kind=dbl_kind), dimension (:,:,:,:), allocatable, public :: & 
          wave_spectrum, &  ! wave spectrum
          ! change in floe size distribution due to processes
          d_afsd_newi, d_afsd_latg, d_afsd_latm, d_afsd_wave, d_afsd_weld

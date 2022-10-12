@@ -78,7 +78,7 @@
       use ice_flux, only: init_coupler_flux, init_history_therm, &
           init_history_dyn, init_flux_atm, init_flux_ocn, alloc_flux
       use ice_forcing, only: init_forcing_ocn, init_forcing_atmo, &
-          get_forcing_atmo, get_forcing_ocn, get_wave_spec, init_snowtable
+          get_forcing_atmo, get_forcing_ocn, get_wave_spec, init_snowtable, get_wrs
       use ice_forcing_bgc, only: get_forcing_bgc, get_atm_bgc, &
           faero_default, faero_optics, alloc_forcing_bgc, fiso_default
       use ice_grid, only: init_grid1, init_grid2, alloc_grid
@@ -92,7 +92,7 @@
       use ice_transport_driver, only: init_transport
 
       logical(kind=log_kind) :: tr_aero, tr_zaero, skl_bgc, z_tracers, &
-         tr_iso, tr_fsd, wave_spec, tr_snow
+         tr_iso, tr_fsd, wave_spec, tr_snow, add_strwave
       character(len=char_len) :: snw_aging_table
       character(len=*), parameter :: subname = '(cice_init)'
 
@@ -171,7 +171,7 @@
       call ice_HaloRestore_init ! restored boundary conditions
 
       call icepack_query_parameters(skl_bgc_out=skl_bgc, z_tracers_out=z_tracers, &
-          wave_spec_out=wave_spec, snw_aging_table_out=snw_aging_table)
+          wave_spec_out=wave_spec, snw_aging_table_out=snw_aging_table, add_strwave_out=add_strwave)
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(trim(subname), &
           file=__FILE__,line= __LINE__)
@@ -225,6 +225,10 @@
          if (snw_aging_table(1:4) /= 'test') then
             call init_snowtable()
          endif
+      endif
+
+      if (add_strwave .and. wave_spec) then
+          call get_wrs
       endif
 
       ! isotopes
@@ -432,8 +436,12 @@
          if (trim(runtype) == 'continue') restart_fsd = .true.
          if (restart_fsd) then
             call read_restart_fsd
-         else
+         else 
+            !write(*,*) "afsdn just before the call of init_fsd in CICE_InitMod (in trcrn(:,:,:,1,:)",trcrn(20,25,nt_fsd:nt_fsd+nfsd-1,1,3)
+            !write(*,*) "afsdn just before the call of init_fsd in CICE_InitMod (in trcrn(:,:,:,2,:)",trcrn(20,25,nt_fsd:nt_fsd+nfsd-1,2,3)
             call init_fsd(trcrn(:,:,nt_fsd:nt_fsd+nfsd-1,:,:))
+            !write(*,*) "afsdn just after the call of init_fsd in CICE_InitMod (in trcrn(:,:,:,1,:)", trcrn(20,25,nt_fsd:nt_fsd+nfsd-1,1,3)
+            !write(*,*) "afsdn just after the call of init_fsd in CICE_InitMod (in trcrn(:,:,:,2,:)",trcrn(20,25,nt_fsd:nt_fsd+nfsd-1,2,3)
          endif
       endif
 

@@ -696,10 +696,9 @@
             call abort_ice(subname//' ERROR: unknown ssh_stress='//trim(ssh_stress), &
                file=__FILE__, line=__LINE__)
          endif
-
          forcex(i,j) = strairx(i,j) + strtltx(i,j)
          forcey(i,j) = strairy(i,j) + strtlty(i,j)
-      enddo
+       enddo
 
       end subroutine dyn_prep2
 
