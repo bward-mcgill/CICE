@@ -5349,31 +5349,62 @@
 
       period = c4*secday
 
+!Version to test WRS (bward)
+
       do iblk = 1, nblocks
-         do j = 1, ny_block   
-         do i = 1, nx_block   
+         do j = 20,80
+         do i = 0,63 
 
          this_block = get_block(blocks_ice(iblk),iblk)
          iglob = this_block%i_glob
          jglob = this_block%j_glob
 
          ! wind components
-         uatm(i,j,iblk) = c5 + (sin(pi2*timesecs/period)-c3) &
-                              * sin(pi2*real(iglob(i), kind=dbl_kind)  &
-                                       /real(nx_global,kind=dbl_kind)) &
-                              * sin(pi *real(jglob(j), kind=dbl_kind)  &
-                                       /real(ny_global,kind=dbl_kind))
-         vatm(i,j,iblk) = c5 + (sin(pi2*timesecs/period)-c3) &
-                              * sin(pi *real(iglob(i), kind=dbl_kind)  &
-                                       /real(nx_global,kind=dbl_kind)) &
-                              * sin(pi2*real(jglob(j), kind=dbl_kind)  &
-                                       /real(ny_global,kind=dbl_kind))
+         uatm(i,j,iblk) = c5
+         vatm(i,j,iblk) = c0
+
          ! wind stress
          wind(i,j,iblk) = sqrt(uatm(i,j,iblk)**2 + vatm(i,j,iblk)**2)
          tau = rhoa(i,j,iblk) * 0.0012_dbl_kind * wind(i,j,iblk)
 
+!         IF (aice(i,j,iblk) == c0) THEN
+!             strax(i,j,iblk) = c0
+!             stray(i,j,iblk) = c0
+!         ELSE
+!             strax(i,j,iblk) = tau * uatm(i,j,iblk)
+!             stray(i,j,iblk) = tau * vatm(i,j,iblk)
+!         ENDIF
+
          strax(i,j,iblk) = aice(i,j,iblk) * tau * uatm(i,j,iblk)
          stray(i,j,iblk) = aice(i,j,iblk) * tau * vatm(i,j,iblk)
+
+
+!Original version
+!      do iblk = 1, nblocks
+!         do j = 1, ny_block   
+!         do i = 1, nx_block   
+!
+!         this_block = get_block(blocks_ice(iblk),iblk)
+!         iglob = this_block%i_glob
+!         jglob = this_block%j_glob
+!
+         ! wind components
+!         uatm(i,j,iblk) = c5 + (sin(pi2*timesecs/period)-c3) &
+!                              * sin(pi2*real(iglob(i), kind=dbl_kind)  &
+!                                       /real(nx_global,kind=dbl_kind)) &
+!                              * sin(pi *real(jglob(j), kind=dbl_kind)  &
+!                                       /real(ny_global,kind=dbl_kind))
+!         vatm(i,j,iblk) = c5 + (sin(pi2*timesecs/period)-c3) &
+!                              * sin(pi *real(iglob(i), kind=dbl_kind)  &
+!                                       /real(nx_global,kind=dbl_kind)) &
+!                              * sin(pi2*real(jglob(j), kind=dbl_kind)  &
+!                                       /real(ny_global,kind=dbl_kind))
+!         ! wind stress
+!         wind(i,j,iblk) = sqrt(uatm(i,j,iblk)**2 + vatm(i,j,iblk)**2)
+!         tau = rhoa(i,j,iblk) * 0.0012_dbl_kind * wind(i,j,iblk)
+!
+!         strax(i,j,iblk) = aice(i,j,iblk) * tau * uatm(i,j,iblk)
+!         stray(i,j,iblk) = aice(i,j,iblk) * tau * vatm(i,j,iblk)
 
 ! initialization test
        ! Diagonal wind vectors 1

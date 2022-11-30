@@ -167,7 +167,7 @@
       use ice_domain_size, only: max_blocks, ncat
       use ice_dyn_shared, only: deformations
       use ice_flux, only: rdg_conv, rdg_shear, strairxT, strairyT, &
-          strairx, strairy, uocn, vocn, ss_tltx, ss_tlty, iceumask, fm, &
+          strairx, strairy, strwavex, strwavey, uocn, vocn, ss_tltx, ss_tlty, iceumask, fm, &
           strtltx, strtlty, strocnx, strocny, strintx, strinty, taubx, tauby, &
           strocnxT, strocnyT, strax, stray, &
           Tbu, hwater, &
@@ -201,8 +201,10 @@
          tmass    , & ! total mass of ice and snow (kg/m^2)
          waterx   , & ! for ocean stress calculation, x (m/s)
          watery   , & ! for ocean stress calculation, y (m/s)
-         forcex   , & ! work array: combined atm stress and ocn tilt, x
-         forcey   , & ! work array: combined atm stress and ocn tilt, y
+         wavex    , & ! Wave radation stress, x (m2/s2)
+         wavey    , & ! Wave radiation stress, y (m2/s2)
+         forcex   , & ! work array: combined atm stress, ocn tilt and wave stress, x
+         forcey   , & ! work array: combined atm stress, ocn tilt and wave stress, y
          bxfix    , & ! part of bx that is constant during Picard
          byfix    , & ! part of by that is constant during Picard
          Cb       , & ! seabed stress coefficient
@@ -212,12 +214,19 @@
          umass    , & ! total mass of ice and snow (u grid)
          umassdti     ! mass of U-cell/dte (kg/m^2 s)
 
+
       real (kind=dbl_kind), dimension(nx_block,ny_block,max_blocks,4):: &
          zetax2   , & ! zetax2 = 2*zeta (bulk viscosity)
          etax2    , & ! etax2  = 2*eta  (shear viscosity)
          rep_prs      ! replacement pressure
 
-      logical (kind=log_kind) :: calc_strair
+      real (kind=dbl_kind) :: &
+           rhow  ! Sea water density
+
+      logical (kind=log_kind) :: &
+         calc_strair, &  ! calculate air/ice stress
+         add_strwave, &
+         wave_spec
 
       integer (kind=int_kind), dimension (nx_block,ny_block,max_blocks) :: &
          icetmask, &  ! ice extent mask (T-cell)
@@ -330,6 +339,20 @@
          call grid_average_X2Y('F',strairyT,'T',strairy,'U')
       endif
 
+     call icepack_query_parameters(add_strwave_out=add_strwave, wave_spec_out=wave_spec)
+     call icepack_query_parameters(rhow_out=rhow)
+
+! Initialise to 0, if add_strwave = false, it will add nothing. 
+      wavex(:,:,:)=c0
+      wavey(:,:,:)=c0
+
+      if (add_strwave .and. wave_spec) then
+!Test bward
+          call grid_average_X2Y('F', strwavex*rhow, grid_atm_dynu, wavex, 'U')
+          call grid_average_X2Y('F', strwavey*rhow, grid_atm_dynv, wavey, 'U')
+      endif
+
+
 ! tcraig, tcx, threading here leads to some non-reproducbile results and failures in icepack_ice_strength
 ! need to do more debugging
       !$TCXOMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,ij,i,j)
@@ -355,6 +378,7 @@
                          umask     (:,:,iblk),                       &
                          uocnU     (:,:,iblk), vocnU     (:,:,iblk), &
                          strairx   (:,:,iblk), strairy   (:,:,iblk), &
+                         wavex     (:,:,iblk), wavey     (:,:,iblk), &
                          ss_tltxU  (:,:,iblk), ss_tltyU  (:,:,iblk), &
                          icetmask  (:,:,iblk), iceumask  (:,:,iblk), &
                          fm        (:,:,iblk), dt,                   &

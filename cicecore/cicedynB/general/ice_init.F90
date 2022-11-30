@@ -2786,6 +2786,9 @@
          vicen , & ! volume per unit area of ice          (m)
          vsnon     ! volume per unit area of snow         (m)
 
+      real (kind=dbl_kind), dimension (nx_block,ny_block,ncat) :: &
+         aicenTest
+
       real (kind=dbl_kind), intent(out), dimension (:,:,:,:) :: & ! (nx_block,ny_block,ntrcr,ncat)
          trcrn     ! ice tracers
                    ! 1: surface temperature of ice/snow (C)
@@ -2929,7 +2932,8 @@
                abar = c1  ! initial ice concentration
             elseif (trim(ice_data_conc) == 'box2001') then
                hbar = c2  ! initial ice thickness
-               abar = p5  ! initial ice concentration
+!               abar = c1  ! initial ice concentration
+               abar = p5
             endif
 
             do n = 1, ncat
@@ -3142,6 +3146,11 @@
                if (trim(ice_data_dist) == 'box2001') then
                   if (hinit(n) > c0) then
 !                  ! varies linearly from 0 to 1 in x direction
+!Test wrs (bward)
+!                     aicen(i,j,n) = c1
+!
+!                     aicenTest(i,j,n) = (real(iglob(i), kind=dbl_kind)-p5) &
+!                                  / (real(nx_global,kind=dbl_kind))
                      aicen(i,j,n) = (real(iglob(i), kind=dbl_kind)-p5) &
                                   / (real(nx_global,kind=dbl_kind))
 !                  ! constant slope from 0 to 0.5 in x direction
@@ -3181,8 +3190,11 @@
 
                endif  ! ice_data_dist
 
+!               vicen(i,j,n) = hinit(n) * aicenTest(i,j,n) ! m
+!               vsnon(i,j,n) = min(aicenTest(i,j,n)*hsno_init,p2*vicen(i,j,n))
                vicen(i,j,n) = hinit(n) * aicen(i,j,n) ! m
                vsnon(i,j,n) = min(aicen(i,j,n)*hsno_init,p2*vicen(i,j,n))
+
 
                call icepack_init_trcr(Tair  = Tair(i,j), Tf = Tf(i,j),  &
                                       Sprofile = salinz(i,j,:),         &

@@ -136,7 +136,7 @@
           seabed_stress_method, seabed_stress, &
           stack_fields, unstack_fields
       use ice_flux, only: rdg_conv, strairxT, strairyT, &
-          strairx, strairy, uocn, vocn, ss_tltx, ss_tlty, iceumask, fm, &
+          strairx, strairy, strwavex, strwavey, uocn, vocn, ss_tltx, ss_tlty, iceumask, fm, &
           strtltx, strtlty, strocnx, strocny, strintx, strinty, taubx, tauby, &
           strocnxT, strocnyT, strax, stray, &
           Tbu, hwater, &
@@ -180,6 +180,8 @@
          tmass      , & ! total mass of ice and snow (kg/m^2)
          waterx     , & ! for ocean stress calculation, x (m/s)
          watery     , & ! for ocean stress calculation, y (m/s)
+         wavex      , & ! Wave radiation stress, x (m2/s2)
+         wavey      , & ! Wave radiation stress, y (m2/s2)
          forcex     , & ! work array: combined atm stress and ocn tilt, x
          forcey     , & ! work array: combined atm stress and ocn tilt, y
          aiu        , & ! ice fraction on u-grid
@@ -192,8 +194,14 @@
       real (kind=dbl_kind), dimension(nx_block,ny_block,8):: &
          strtmp         ! stress combinations for momentum equation
 
+
+      real (kind=dbl_kind) :: &
+           rhow  ! Sea water density
+
       logical (kind=log_kind) :: &
-         calc_strair
+         calc_strair, &  ! calculate air/ice stress
+         add_strwave, &
+         wave_spec
 
       integer (kind=int_kind), dimension (nx_block,ny_block,max_blocks) :: &
          icetmask   , & ! ice extent mask (T-cell)
@@ -299,6 +307,20 @@
          call grid_average_X2Y('F', strairyT, 'T', strairy, 'U')
       endif
 
+     call icepack_query_parameters(add_strwave_out=add_strwave, wave_spec_out=wave_spec)
+     call icepack_query_parameters(rhow_out=rhow)
+
+! Initialise to 0, if add_strwave = false, it will add nothing. 
+      wavex(:,:,:)=c0
+      wavey(:,:,:)=c0
+
+      if (add_strwave .and. wave_spec) then
+!Test bward
+          call grid_average_X2Y('F', strwavex*rhow, grid_atm_dynu, wavex, 'U')
+          call grid_average_X2Y('F', strwavey*rhow, grid_atm_dynv, wavey, 'U')
+      endif
+
+
       !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,ij,i,j) SCHEDULE(runtime)
       do iblk = 1, nblocks
 
@@ -322,6 +344,7 @@
                          umask     (:,:,iblk),                       &
                          uocnU     (:,:,iblk), vocnU     (:,:,iblk), &
                          strairx   (:,:,iblk), strairy   (:,:,iblk), &
+                         wavex     (:,:,iblk), wavey     (:,:,iblk), &
                          ss_tltxU  (:,:,iblk), ss_tltyU  (:,:,iblk), &
                          icetmask  (:,:,iblk), iceumask  (:,:,iblk), &
                          fm        (:,:,iblk), dt,                   &

@@ -1,5 +1,5 @@
 ice_ic = 'internal'
-dt = 3600.0
+dt = 300.0
 npt            = 1
 dxrect         = 25.e4
 dyrect         = 25.e4

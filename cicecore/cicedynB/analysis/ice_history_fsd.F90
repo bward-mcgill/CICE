@@ -271,7 +271,7 @@
 
       do ns = 1, nstreams
          if (histfreq(ns) /= 'x') then
-
+          
          if (f_afsdn(1:1) /= 'x') &
             call define_hist_field(n_afsdn,"afsdn","1",tstr4Df, tcstr, & 
                "areal floe size and thickness distribution",    &

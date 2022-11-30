@@ -154,8 +154,8 @@
          watery   , & ! for ocean stress calculation, y (m/s)
          wavex    , & ! Wave radiation stress, x (m2/s2)
          wavey    , & ! Wave radiation stress, y (m2/s2)
-         forcex   , & ! work array: combined atm stress and ocn tilt, x
-         forcey   , & ! work array: combined atm stress and ocn tilt, y
+         forcex   , & ! work array: combined atm stress, ocn tilt and wave stress, x
+         forcey   , & ! work array: combined atm stress, ocn tilt and wave stress, y
          aiu      , & ! ice fraction on u-grid
          umass    , & ! total mass of ice and snow (u grid)
          umassdti     ! mass of U-cell/dte (kg/m^2 s)
@@ -169,8 +169,8 @@
          wateryN  , & ! for ocean stress calculation, y (m/s)
          wavexN    , & ! Wave radiation stress, x (m2/s2)
          waveyN    , & ! Wave radiation stress, y (m2/s2)
-         forcexN  , & ! work array: combined atm stress and ocn tilt, x
-         forceyN  , & ! work array: combined atm stress and ocn tilt, y
+         forcexN  , & ! work array: combined atm stress, ocn tilt and wave stress, x
+         forceyN  , & ! work array: combined atm stress, ocn tilt and wave stress, y
          aiN      , & ! ice fraction on N-grid
          nmass    , & ! total mass of ice and snow (N grid)
          nmassdti  ! mass of N-cell/dte (kg/m^2 s)
@@ -187,8 +187,8 @@
          wateryE  , & ! for ocean stress calculation, y (m/s)
          wavexE    , & ! Wave radiation stress, x (m2/s2)
          waveyE    , & ! Wave radiation stress, y (m2/s2)
-         forcexE  , & ! work array: combined atm stress and ocn tilt, x
-         forceyE  , & ! work array: combined atm stress and ocn tilt, y
+         forcexE  , & ! work array: combined atm stress, ocn tilt and wave stress, x
+         forceyE  , & ! work array: combined atm stress, ocn tilt and wave stress, y
          aiE      , & ! ice fraction on E-grid
          emass    , & ! total mass of ice and snow (E grid)
          emassdti     ! mass of E-cell/dte (kg/m^2 s)
@@ -348,6 +348,7 @@
          call grid_average_X2Y('S', ss_tltx  , grid_ocn_dynu, ss_tltxN, 'N')
          call grid_average_X2Y('S', ss_tlty  , grid_ocn_dynv, ss_tltyN, 'N')
       endif
+
       !----------------------------------------------------------------
       ! Set wind stress to values supplied via NEMO or other forcing
       ! Map T to U, N, E as needed
@@ -368,6 +369,8 @@
                               field_loc_center, field_type_vector)
          call grid_average_X2Y('F', strairxT, 'T', strairx, 'U')
          call grid_average_X2Y('F', strairyT, 'T', strairy, 'U')
+         write(*,*) "strairy = ", SUM(strairy(:,:,:))
+         write(*,*) "strairx =", SUM(strairx(:,:,:))
       endif
 
       if (grid_ice == 'CD' .or. grid_ice == 'C') then
@@ -387,31 +390,44 @@
       call icepack_query_parameters(add_strwave_out=add_strwave, wave_spec_out=wave_spec)
       call icepack_query_parameters(rhow_out=rhow)
 
+! Initialise to 0, if add_strwave = false, it will add nothing. 
+      wavex(:,:,:)=c0
+      wavey(:,:,:)=c0
+      wavexN(:,:,:)=c0
+      waveyN(:,:,:)=c0
+      wavexE(:,:,:)=c0
+      waveyE(:,:,:)=c0
+
       if (add_strwave .and. wave_spec) then
-          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavex, 'U')
-          call grid_average_X2Y('F', strwavey, grid_atm_dynv, wavey, 'U')
-          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavexN, 'N')
-          call grid_average_X2Y('F', strwavey, grid_atm_dynv, waveyN, 'N')
-          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavexE, 'E')
-          call grid_average_X2Y('F', strwavey, grid_atm_dynv, waveyE, 'E')
+!Test bward
+!          call grid_average_X2Y('F', strwavex, grid_atm_dynu, wavex, 'U')
+!          call grid_average_X2Y('F', strwavey, grid_atm_dynv, wavey, 'U')
+          wavex=strwavex*rhow
+          wavey=strwavey*rhow
+          call grid_average_X2Y('F', strwavex*rhow, grid_atm_dynu, wavexN, 'N')
+          call grid_average_X2Y('F', strwavey*rhow, grid_atm_dynv, waveyN, 'N')
+          call grid_average_X2Y('F', strwavex*rhow, grid_atm_dynu, wavexE, 'E')
+          call grid_average_X2Y('F', strwavey*rhow, grid_atm_dynv, waveyE, 'E')
 
-          !$OMP PARALLEL DO PRIVATE(iblk,i,j)
-          do iblk = 1, nblocks
-            do j = 1, ny_block
-               do i = 1, nx_block
-                 strairx(i,j,iblk) = strairx(i,j,iblk) + wavex(i,j,iblk)*rhow
-                 strairy(i,j,iblk) = strairy(i,j,iblk) + wavey(i,j,iblk)*rhow
-               enddo
-            enddo
-         enddo  ! iblk
-         !$OMP END PARALLEL DO
-
-          if (grid_ice == 'CD' .or. grid_ice == 'C') then
-             strairxN = strairxN + wavexN
-             strairxN = strairyN + waveyN
-             strairxE = strairxE + wavexE
-             strairxE = strairyE + waveyE
-          endif
+!          !$OMP PARALLEL DO PRIVATE(iblk,i,j)
+!          do iblk = 1, nblocks
+!            do j = 1, ny_block
+!               do i = 1, nx_block
+!                  strairx(i,j,iblk) = strairx(i,j,iblk) + wavex(i,j,iblk)*rhow
+!                  strairy(i,j,iblk) = strairy(i,j,iblk) + wavey(i,j,iblk)*rhow
+! !                 strairx(i,j,iblk) = wavex(i,j,iblk)*rhow
+! !                 strairy(i,j,iblk) = wavey(i,j,iblk)*rhow 
+!              enddo
+!            enddo
+!         enddo  ! iblk
+!         !$OMP END PARALLEL DO
+!
+!          if (grid_ice == 'CD' .or. grid_ice == 'C') then
+!             strairxN = strairxN + wavexN
+!             strairxN = strairyN + waveyN
+!             strairxE = strairxE + wavexE
+!             strairxE = strairyE + waveyE
+!          endif
       endif
 
       !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,ij,i,j) SCHEDULE(runtime)
@@ -438,6 +454,7 @@
                             umask     (:,:,iblk),                       &
                             uocnU     (:,:,iblk), vocnU     (:,:,iblk), &
                             strairx   (:,:,iblk), strairy   (:,:,iblk), &
+                            wavex     (:,:,iblk), wavey     (:,:,iblk), &
                             ss_tltxU  (:,:,iblk), ss_tltyU  (:,:,iblk), &
                             icetmask  (:,:,iblk), iceumask  (:,:,iblk), &
                             fm        (:,:,iblk), dt,                   &
@@ -468,6 +485,7 @@
                             umaskCD   (:,:,iblk),                       &
                             uocnU     (:,:,iblk), vocnU     (:,:,iblk), &
                             strairx   (:,:,iblk), strairy   (:,:,iblk), &
+                            wavex     (:,:,iblk), wavey     (:,:,iblk), &
                             ss_tltxU  (:,:,iblk), ss_tltyU  (:,:,iblk), &
                             icetmask  (:,:,iblk), iceumask  (:,:,iblk), &
                             fm        (:,:,iblk), dt,                   &
@@ -533,6 +551,7 @@
                          nmask     (:,:,iblk),                       &
                          uocnN     (:,:,iblk), vocnN     (:,:,iblk), &
                          strairxN  (:,:,iblk), strairyN  (:,:,iblk), &
+                         wavexN    (:,:,iblk), waveyN    (:,:,iblk), &
                          ss_tltxN  (:,:,iblk), ss_tltyN  (:,:,iblk), &
                          icetmask  (:,:,iblk), icenmask  (:,:,iblk), &
                          fmN       (:,:,iblk), dt,                   &
@@ -566,6 +585,7 @@
                          emask     (:,:,iblk),                       &
                          uocnE     (:,:,iblk), vocnE     (:,:,iblk), &
                          strairxE  (:,:,iblk), strairyE  (:,:,iblk), &
+                         wavexE    (:,:,iblk), waveyE    (:,:,iblk), &
                          ss_tltxE  (:,:,iblk), ss_tltyE  (:,:,iblk), &
                          icetmask  (:,:,iblk), iceemask  (:,:,iblk), &
                          fmE       (:,:,iblk), dt,                   &

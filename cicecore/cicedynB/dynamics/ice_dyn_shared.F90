@@ -477,6 +477,7 @@
                             umask,                  &
                             uocn,       vocn,       &
                             strairx,    strairy,    &
+                            wavex,      wavey,      &
                             ss_tltx,    ss_tlty,    &
                             icetmask,   iceumask,   &
                             fm,         dt,         &
@@ -525,6 +526,8 @@
          fcor    , & ! Coriolis parameter (1/s)
          strairx , & ! stress on ice by air, x-direction
          strairy , & ! stress on ice by air, y-direction
+         wavex   , & !
+         wavey   , & !
          uocn    , & ! ocean current, x-direction (m/s)
          vocn    , & ! ocean current, y-direction (m/s)
          ss_tltx , & ! sea surface slope, x-direction (m/m)
@@ -696,8 +699,8 @@
             call abort_ice(subname//' ERROR: unknown ssh_stress='//trim(ssh_stress), &
                file=__FILE__, line=__LINE__)
          endif
-         forcex(i,j) = strairx(i,j) + strtltx(i,j)
-         forcey(i,j) = strairy(i,j) + strtlty(i,j)
+         forcex(i,j) = strairx(i,j) + strtltx(i,j) + wavex(i,j)
+         forcey(i,j) = strairy(i,j) + strtlty(i,j) + wavey(i,j)
        enddo
 
       end subroutine dyn_prep2

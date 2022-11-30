@@ -665,8 +665,11 @@
       zlvl  (:,:,:) = c10             ! atm level height (momentum) (m)
       zlvs  (:,:,:) = c10             ! atm level height (scalar quantities) (m)
       rhoa  (:,:,:) = 1.3_dbl_kind    ! air density (kg/m^3)
-      uatm  (:,:,:) = c5              ! wind velocity    (m/s)
-      vatm  (:,:,:) = c5
+!      uatm  (:,:,:) = c5              ! wind velocity    (m/s)
+!      vatm  (:,:,:) = c5
+!      uatm  (:,:,:) = c0              ! wind velocity    (m/s)
+!      vatm  (:,:,:) = c0
+
       !strax (:,:,:) = 0.05_dbl_kind
       !stray (:,:,:) = 0.05_dbl_kind
       strax (:,:,:) = c0 !test
@@ -1207,6 +1210,7 @@
             ar = c1 / aice(i,j)
             strairxT(i,j) = strairxT(i,j) * ar
             strairyT(i,j) = strairyT(i,j) * ar
+
             fsens   (i,j) = fsens   (i,j) * ar
             flat    (i,j) = flat    (i,j) * ar
             fswabs  (i,j) = fswabs  (i,j) * ar

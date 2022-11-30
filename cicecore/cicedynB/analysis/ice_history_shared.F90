@@ -275,18 +275,21 @@
            f_fhocn     = 'm', f_fhocn_ai   = 'm', &
            f_fswthru   = 'm', f_fswthru_ai = 'm', &
            f_strairx   = 'm', f_strairy    = 'm', &
+           f_strwvx    = 'm', f_strwvy     = 'm', &
            f_strtltx   = 'm', f_strtlty    = 'm', &
            f_strcorx   = 'm', f_strcory    = 'm', &
            f_strocnx   = 'm', f_strocny    = 'm', &
            f_strintx   = 'm', f_strinty    = 'm', &
            f_taubx     = 'm', f_tauby      = 'm', &
            f_strairxN  = 'x', f_strairyN   = 'x', &
+           f_strwvxN  = 'x' , f_strwvyN   = 'x' , &
            f_strtltxN  = 'x', f_strtltyN   = 'x', &
            f_strcorxN  = 'x', f_strcoryN   = 'x', &
            f_strocnxN  = 'x', f_strocnyN   = 'x', &
            f_strintxN  = 'x', f_strintyN   = 'x', &
            f_taubxN    = 'x', f_taubyN     = 'x', &
            f_strairxE  = 'x', f_strairyE   = 'x', &
+           f_strwvxE  = 'x' , f_strwvyE   = 'x',  &
            f_strtltxE  = 'x', f_strtltyE   = 'x', &
            f_strcorxE  = 'x', f_strcoryE   = 'x', &
            f_strocnxE  = 'x', f_strocnyE   = 'x', &
@@ -442,6 +445,7 @@
            f_fhocn,     f_fhocn_ai , &
            f_fswthru,   f_fswthru_ai,&
            f_strairx,   f_strairy  , &
+           f_strwvx,    f_strwvy   , &
            f_strtltx,   f_strtlty  , &
            f_strcorx,   f_strcory  , &
            f_strocnx,   f_strocny  , &
@@ -634,17 +638,20 @@
            n_fhocn      , n_fhocn_ai   , &
            n_fswthru    , n_fswthru_ai , &
            n_strairx    , n_strairy    , &
+           n_strwvx     , n_strwvy     , &
            n_strtltx    , n_strtlty    , &
            n_strcorx    , n_strcory    , &
            n_strocnx    , n_strocny    , &
            n_strintx    , n_strinty    , &
            n_taubx      , n_tauby      , &
+           n_strwvxN    , n_strwvyN     , &
            n_strairxN   , n_strairyN   , &
            n_strtltxN   , n_strtltyN   , &
            n_strcorxN   , n_strcoryN   , &
            n_strocnxN   , n_strocnyN   , &
            n_strintxN   , n_strintyN   , &
            n_taubxN     , n_taubyN     , &
+           n_strwvxE    , n_strwvyE    , &
            n_strairxE   , n_strairyE   , &
            n_strtltxE   , n_strtltyE   , &
            n_strcorxE   , n_strcoryE   , &
