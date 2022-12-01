@@ -19,7 +19,7 @@
       use icepack_intfc, only: icepack_aggregate
       use icepack_intfc, only: icepack_init_itd, icepack_init_itd_hist
       use icepack_intfc, only: icepack_init_fsd_bounds, icepack_init_wave
-      use icepack_intfc, only: icepack_init_snow
+      use icepack_intfc, only: icepack_init_snow, icepack_init_spwf_fullnet, icepack_init_spwf_class
       use icepack_intfc, only: icepack_configure
       use icepack_intfc, only: icepack_warnings_flush, icepack_warnings_aborted
       use icepack_intfc, only: icepack_query_parameters, icepack_query_tracer_flags, &
@@ -78,7 +78,7 @@
       use ice_flux, only: init_coupler_flux, init_history_therm, &
           init_history_dyn, init_flux_atm, init_flux_ocn, alloc_flux
       use ice_forcing, only: init_forcing_ocn, init_forcing_atmo, &
-          get_forcing_atmo, get_forcing_ocn, get_wave_spec, init_snowtable, get_wrs
+          get_forcing_atmo, get_forcing_ocn, get_wave_spec, init_snowtable, get_wrs, wave_spec_data
       use ice_forcing_bgc, only: get_forcing_bgc, get_atm_bgc, &
           faero_default, faero_optics, alloc_forcing_bgc, fiso_default
       use ice_grid, only: init_grid1, init_grid2, alloc_grid
@@ -230,6 +230,13 @@
       if (add_strwave .and. wave_spec) then
           call get_wrs
       endif
+
+     ! ML fullnet
+      if (tr_fsd .and. wave_spec) call icepack_init_spwf_fullnet
+      if (tr_fsd .and. wave_spec) call icepack_init_spwf_class
+
+      !if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
+      if (tr_fsd .and. wave_spec) call wave_spec_data ! wave spectrum in ice
 
       ! isotopes
       if (tr_iso)     call fiso_default                 ! default values

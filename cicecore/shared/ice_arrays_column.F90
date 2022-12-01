@@ -303,6 +303,7 @@
 
       real (kind=dbl_kind), dimension (:,:,:,:), allocatable, public :: & 
          wave_spectrum, &  ! wave spectrum
+         frachist,      &  ! histogram of wave fractures
          ! change in floe size distribution due to processes
          d_afsd_newi, d_afsd_latg, d_afsd_latm, d_afsd_wave, d_afsd_weld
 
@@ -447,6 +448,7 @@
          dwavefreq      (nfreq)     , & ! wave frequency bin widths
          wave_sig_ht    (nx_block,ny_block,          max_blocks), & !
          wave_spectrum  (nx_block,ny_block,nfreq,    max_blocks), & !
+         frachist       (nx_block,ny_block,nfsd,     max_blocks), & !
          d_afsd_newi    (nx_block,ny_block,nfsd,     max_blocks), & !
          d_afsd_latg    (nx_block,ny_block,nfsd,     max_blocks), & !
          d_afsd_latm    (nx_block,ny_block,nfsd,     max_blocks), & !

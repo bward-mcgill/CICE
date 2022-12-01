@@ -47,7 +47,7 @@
 
       use ice_calendar, only: istep, istep1, dt, stop_now, advance_timestep
       use ice_forcing, only: get_forcing_atmo, get_forcing_ocn, &
-          get_wave_spec, get_wrs
+          get_wave_spec, get_wrs, wave_spec_data
       use ice_forcing_bgc, only: get_forcing_bgc, get_atm_bgc, &
           fiso_default, faero_default
       use ice_flux, only: init_flux_atm, init_flux_ocn
@@ -95,17 +95,17 @@
 
          call ice_timer_start(timer_couple)  ! atm/ocn coupling
 
-
          if (add_strwave .and. wave_spec) then
              call get_wrs
          endif
-! for now, wave_spectrum is constant in time
 !         if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
+         if (tr_fsd .and. wave_spec) call wave_spec_data ! wave spectrum in ice
          call get_forcing_atmo     ! atmospheric forcing from data
          call get_forcing_ocn(dt)  ! ocean forcing from data
-
+ 
          ! isotopes
          if (tr_iso)     call fiso_default                 ! default values
+         
          ! aerosols
          ! if (tr_aero)  call faero_data                   ! data file
          ! if (tr_zaero) call fzaero_data                  ! data file (gx1)

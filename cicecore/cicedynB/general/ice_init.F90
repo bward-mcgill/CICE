@@ -149,7 +149,7 @@
 
       character (len=char_len) :: shortwave, albedo_type, conduct, fbot_xfer_type, &
         tfrz_option, frzpnd, atmbndy, wave_spec_type, snwredist, snw_aging_table, &
-        capping_method
+        capping_method, wave_solver
 
       logical (kind=log_kind) :: calc_Tsfc, formdrag, highfreq, calc_strair, add_strwave, wave_spec, &
         sw_redist, calc_dragio, use_smliq_pnd, snwgrain
@@ -258,7 +258,8 @@
         ustar_min,      emissivity,      iceruf,        iceruf_ocn,     &
         fbot_xfer_type, update_ocn_f,    l_mpond_fresh, tfrz_option,    &
         oceanmixed_ice, restore_ice,     restore_ocn,   trestore,       &
-        precip_units,   default_season,  wave_spec_type,nfreq,          &
+        precip_units,   default_season,  wave_spec_type,wave_solver,    &
+        nfreq,          &
         atm_data_type,  ocn_data_type,   bgc_data_type, fe_data_type,   &
         ice_data_type,  ice_data_conc,   ice_data_dist, add_strwave,    &
         fyear_init,     ycycle,          wave_spec_file,restart_coszen, &
@@ -490,6 +491,7 @@
       tfrz_option     = 'mushy'   ! freezing temp formulation
       oceanmixed_ice  = .false.   ! if true, use internal ocean mixed layer
       wave_spec_type  = 'none'    ! type of wave spectrum forcing
+      wave_solver     = 'ml'      ! method of wave fracture solution
       nfreq           = 25        ! number of wave frequencies
       wave_spec_file  = ' '       ! wave forcing file name
       ocn_data_format = 'bin'     ! file format ('bin'=binary or 'nc'=netcdf)
@@ -964,6 +966,7 @@
       call broadcast_scalar(precip_units,         master_task)
       call broadcast_scalar(oceanmixed_ice,       master_task)
       call broadcast_scalar(wave_spec_type,       master_task)
+      call broadcast_scalar(wave_solver,          master_task)
       call broadcast_scalar(wave_spec_file,       master_task)
       call broadcast_scalar(nfreq,                master_task)
       call broadcast_scalar(tfrz_option,          master_task)
@@ -2248,6 +2251,8 @@
          endif
 
          if (wave_spec) then
+            write(nu_diag,1031)    ' wave_spec_type            = ', trim(wave_spec_type)
+            write(nu_diag,1031)    ' wave_solver               = ', trim(wave_solver)
             write(nu_diag,1031) ' wave_spec_file   = ', trim(wave_spec_file)
          endif
          if (trim(bgc_data_type) == 'ncar' .or. &
@@ -2372,8 +2377,8 @@
          a_rapid_mode_in=a_rapid_mode, Rac_rapid_mode_in=Rac_rapid_mode, &
          floediam_in=floediam, hfrazilmin_in=hfrazilmin, &
          aspect_rapid_mode_in=aspect_rapid_mode, dSdt_slow_mode_in=dSdt_slow_mode, &
-         phi_c_slow_mode_in=phi_c_slow_mode, phi_i_mushy_in=phi_i_mushy, conserv_check_in=conserv_check, &
-         wave_spec_type_in = wave_spec_type, &
+         phi_c_slow_mode_in=phi_c_slow_mode, phi_i_mushy_in=phi_i_mushy, &
+         wave_spec_type_in = wave_spec_type, wave_solver_in = wave_solver, conserv_check_in=conserv_check, &
          wave_spec_in=wave_spec, nfreq_in=nfreq, &
          tfrz_option_in=tfrz_option, kalg_in=kalg, fbot_xfer_type_in=fbot_xfer_type, &
          Pstar_in=Pstar, Cstar_in=Cstar, iceruf_in=iceruf, iceruf_ocn_in=iceruf_ocn, calc_dragio_in=calc_dragio, &
