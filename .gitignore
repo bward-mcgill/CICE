@@ -15,7 +15,7 @@ caselist*
 
 
 #Ignore work, input and output directories
-icepack/*
+icepack
 work
 inp
 out
