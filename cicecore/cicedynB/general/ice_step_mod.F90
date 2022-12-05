@@ -847,7 +847,7 @@
       subroutine step_dyn_wave (dt)
 
       use ice_arrays_column, only: wave_spectrum, wave_sig_ht, &
-          d_afsd_wave, floe_rad_l, floe_rad_c, wavefreq, dwavefreq
+          d_afsd_wave, floe_rad_l, floe_rad_c, wavefreq, dwavefreq, floe_binwidth, frachist
       use ice_blocks, only: block, get_block
       use ice_domain, only: blocks_ice, nblocks
       use ice_domain_size, only: ncat, nfsd, nfreq
@@ -870,17 +870,19 @@
          ntrcr,           & !
          nbtrcr             !
 
-      character (len=char_len) :: wave_spec_type
+      character (len=char_len) :: wave_solver, wave_spec_type
 
       character(len=*), parameter :: subname = '(step_dyn_wave)'
 
       call ice_timer_start(timer_column)
       call ice_timer_start(timer_fsd)
 
-      call icepack_query_parameters(wave_spec_type_out=wave_spec_type)
+      call icepack_query_parameters(wave_solver_out=wave_solver, wave_spec_type_out=wave_spec_type)
       call icepack_warnings_flush(nu_diag)
       if (icepack_warnings_aborted()) call abort_ice(error_message=subname, &
          file=__FILE__, line=__LINE__)
+
+      if (wave_spec_type .ne. 'none') then
 
       !$OMP PARALLEL DO PRIVATE(iblk,i,j,ilo,ihi,jlo,jhi,this_block)
       do iblk = 1, nblocks
@@ -894,20 +896,23 @@
          do j = jlo, jhi
          do i = ilo, ihi
             d_afsd_wave(i,j,:,iblk) = c0
-            call icepack_step_wavefracture (wave_spec_type, &
+            call icepack_step_wavefracture (wave_solver,   &
                                             dt, ncat, nfsd, nfreq,         &
                                             aice           (i,j,    iblk), &
                                             vice           (i,j,    iblk), &
                                             aicen          (i,j,:,  iblk), &
                                             floe_rad_l(:), floe_rad_c(:),  &
+                                            floe_binwidth(:)            ,  &
                                             wave_spectrum  (i,j,:,  iblk), &
                                             wavefreq(:),   dwavefreq(:),   &
                                             trcrn          (i,j,:,:,iblk), &
-                                            d_afsd_wave    (i,j,:,  iblk))
+                                            d_afsd_wave    (i,j,:,  iblk), &
+                                            frachist       (i,j,:,iblk) )
          end do ! i
          end do ! j
       end do    ! iblk
       !$OMP END PARALLEL DO
+      end if
 
       call ice_timer_stop(timer_fsd)
       call ice_timer_stop(timer_column)

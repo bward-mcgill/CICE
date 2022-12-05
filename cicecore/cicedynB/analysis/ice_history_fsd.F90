@@ -31,9 +31,9 @@
            f_dafsd_newi = 'm', f_dafsd_latg  = 'm', &
            f_dafsd_latm = 'm', f_dafsd_wave  = 'm', &
            f_dafsd_weld = 'm', f_wave_sig_ht = 'm', &
-           f_aice_ww    = 'x', f_diam_ww     = 'x', &
-           f_hice_ww    = 'x', f_fsdrad      = 'x', &
-           f_fsdperim   = 'x'
+           f_aice_ww    = 'm', f_diam_ww     = 'm', &
+           f_hice_ww    = 'm', f_fsdrad      = 'm', &
+           f_fsdperim   = 'm', f_frachist    = 'm'
 
       !---------------------------------------------------------------
       ! namelist variables
@@ -46,20 +46,20 @@
            f_dafsd_weld, f_wave_sig_ht, &
            f_aice_ww   , f_diam_ww    , &
            f_hice_ww   , f_fsdrad     , &
-           f_fsdperim
+           f_fsdperim,   f_frachist
 
       !---------------------------------------------------------------
       ! field indices
       !---------------------------------------------------------------
 
-      integer (kind=int_kind), dimension(max_nstrm) :: &
+      integer (kind=int_kind), dimension(max_nstrm), public :: &
            n_afsd      , n_afsdn      , &
            n_dafsd_newi, n_dafsd_latg , &
            n_dafsd_latm, n_dafsd_wave , &
            n_dafsd_weld, n_wave_sig_ht, &
            n_aice_ww   , n_diam_ww    , &
            n_hice_ww   , n_fsdrad     , &
-           n_fsdperim
+           n_fsdperim  , n_frachist
 
 !=======================================================================
 
@@ -132,13 +132,15 @@
       call broadcast_scalar (f_hice_ww, master_task)
       call broadcast_scalar (f_fsdrad, master_task)
       call broadcast_scalar (f_fsdperim, master_task)
+      call broadcast_scalar (f_frachist, master_task)
+
 
       ! 2D variables
 
       do ns = 1, nstreams
 
       if (f_wave_sig_ht(1:1) /= 'x') &
-         call define_hist_field(n_wave_sig_ht,"wave_sig_ht","1",tstr2D, tcstr, &
+         call define_hist_field(n_wave_sig_ht,"wave_sig_ht","m",tstr2D, tcstr, &
              "significant height of wind and swell waves",  &
              "from attenuated spectrum in ice", c1, c0,     &
              ns, f_wave_sig_ht)
@@ -148,7 +150,7 @@
              "for waves", c1, c0,                           &
              ns, f_aice_ww)
       if (f_diam_ww(1:1) /= 'x') &
-         call define_hist_field(n_diam_ww,"diam_ww","1",tstr2D, tcstr, &
+         call define_hist_field(n_diam_ww,"diam_ww","m",tstr2D, tcstr, &
              "Average (number) diameter of floes > Dmin",   &
              "for waves", c1, c0,                           &
              ns, f_diam_ww)
@@ -217,7 +219,7 @@
          if (histfreq(ns) /= 'x') then
 
          if (f_afsd(1:1) /= 'x') &
-            call define_hist_field(n_afsd,"afsd", "1", tstr3Df, tcstr, &
+            call define_hist_field(n_afsd,"afsd", "1/m", tstr3Df, tcstr, &
                "areal floe size distribution",                 &
                "per unit bin width ", c1, c0, ns, f_afsd)
          if (f_dafsd_newi(1:1) /= 'x') &
@@ -240,6 +242,10 @@
             call define_hist_field(n_dafsd_weld,"dafsd_weld","1",tstr3Df, tcstr, &
                "Change in fsd: welding",                       &
                "Avg over freq period", c1, c0, ns, f_dafsd_weld)
+          if (f_frachist(1:1) /= 'x') &
+            call define_hist_field(n_frachist,"frachist", "1", tstr3Df, tcstr, &
+               "wave fracture histogram",                 &
+               "Avg over freq period ", c1, c0, ns, f_frachist)
          endif ! if (histfreq(ns) /= 'x')
       enddo ! ns
 
@@ -273,7 +279,7 @@
          if (histfreq(ns) /= 'x') then
           
          if (f_afsdn(1:1) /= 'x') &
-            call define_hist_field(n_afsdn,"afsdn","1",tstr4Df, tcstr, & 
+            call define_hist_field(n_afsdn,"afsdn","1/m",tstr4Df, tcstr, & 
                "areal floe size and thickness distribution",    &
                "per unit bin width", c1, c0, ns, f_afsdn)
 
@@ -297,7 +303,7 @@
          ncat_hist, accum_hist_field, n3Dacum, n4Dscum
       use ice_state, only: trcrn, aicen_init, vicen, aice_init
       use ice_arrays_column, only: wave_sig_ht, floe_rad_c, floe_binwidth, &
-         d_afsd_newi, d_afsd_latg, d_afsd_latm, d_afsd_wave, d_afsd_weld
+         d_afsd_newi, d_afsd_latg, d_afsd_latm, d_afsd_wave, d_afsd_weld, frachist
 
       integer (kind=int_kind), intent(in) :: &
            iblk                 ! block index
@@ -466,6 +472,9 @@
       if (f_dafsd_weld(1:1)/= 'x') &
              call accum_hist_field(n_dafsd_weld-n3Dacum, iblk, nfsd_hist, &
                                     d_afsd_weld(:,:,1:nfsd_hist,iblk), a3Df)
+      if (f_frachist(1:1)/= 'x') &
+             call accum_hist_field(n_frachist-n3Dacum, iblk, nfsd_hist, &
+                                    frachist(:,:,1:nfsd_hist,iblk), a3Df)
       endif ! a3Df allocated
 
       ! 4D floe size, thickness category fields
