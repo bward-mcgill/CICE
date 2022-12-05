@@ -49,8 +49,7 @@
       implicit none
       private
       public :: init_forcing_atmo, init_forcing_ocn, alloc_forcing, &
-                get_forcing_atmo, get_forcing_ocn, get_wave_spec, get_wrs, &
-                get_wave_spec, wave_spec_data, &
+                get_forcing_atmo, get_forcing_ocn, get_wave_spec, get_wrs, wave_spec_data, &
                 read_clim_data, read_clim_data_nc, &
                 interpolate_data, interp_coeff_monthly, &
                 read_data_nc_point, interp_coeff, &
@@ -171,7 +170,7 @@
          trest                       ! restoring time scale (sec)
 
       logical (kind=log_kind), public :: &
-         debug_forcing               ! prints forcing debugging output if true
+         debug_forcing, dbug               ! prints forcing debugging output if true
 
       real (dbl_kind), dimension(:), allocatable, public :: &
          jday_atm  ! jday time vector from atm forcing files
@@ -6010,6 +6009,8 @@
       use ice_grid, only: hm, tlon, tlat, tmask, umask
       use ice_calendar, only: days_per_year, use_leap_years
 
+      integer (kind=int_kind) :: modadj   ! adjustment for mod function
+
       integer (kind=int_kind) :: & 
           ncid        , & ! netcdf file id
 	  i, j, freq  , &
@@ -6064,7 +6065,10 @@
       spec_file = trim(wave_spec_file)
       wave_spectrum_data = c0
       wave_spectrum = c0
-      yr = fyear_init + mod(nyr-1,ycycle)  ! current year
+
+      ! Not sure about this one... bward
+      modadj	  = abs((min(0,myear-fyear_init)/ycycle+1)*ycycle)
+      yr  = fyear_init + mod(myear-fyear_init+modadj,ycycle)
     !-------------------------------------------------------------------
     ! 6-hourly data
     ! 
@@ -6085,7 +6089,8 @@
       end if
 
       ! current record number
-      recnum = 4*int(yday) - 3 + int(real(sec,kind=dbl_kind)/sec6hr)
+      !Not sure about this one... bward
+      recnum = 4*int(yday) - 3 + int(real(msec,kind=dbl_kind)/sec6hr)
 
       ! Compute record numbers for surrounding data (2 on each side)
 

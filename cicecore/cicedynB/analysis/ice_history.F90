@@ -4424,32 +4424,32 @@
            do j = jlo, jhi
            do i = ilo, ihi
               if (.not. tmask(i,j,iblk)) then ! mask out land points
-                 if (n_divu     (ns) /= 0) a2D(i,j,n_divu(ns),     iblk) = spval
-                 if (n_shear    (ns) /= 0) a2D(i,j,n_shear(ns),    iblk) = spval
-                 if (n_sig1     (ns) /= 0) a2D(i,j,n_sig1(ns),     iblk) = spval
-                 if (n_sig2     (ns) /= 0) a2D(i,j,n_sig2(ns),     iblk) = spval
-                 if (n_sigP     (ns) /= 0) a2D(i,j,n_sigP(ns),     iblk) = spval
-                 if (n_sistreave(ns) /= 0) a2D(i,j,n_sistreave(ns),iblk) = spval
-                 if (n_sistremax(ns) /= 0) a2D(i,j,n_sistremax(ns),iblk) = spval
-                 if (n_mlt_onset(ns) /= 0) a2D(i,j,n_mlt_onset(ns),iblk) = spval
-                 if (n_frz_onset(ns) /= 0) a2D(i,j,n_frz_onset(ns),iblk) = spval
-                 if (n_hisnap   (ns) /= 0) a2D(i,j,n_hisnap(ns),   iblk) = spval
-                 if (n_aisnap   (ns) /= 0) a2D(i,j,n_aisnap(ns),   iblk) = spval
-                 if (n_trsig    (ns) /= 0) a2D(i,j,n_trsig(ns),    iblk) = spval
-                 if (n_iage     (ns) /= 0) a2D(i,j,n_iage(ns),     iblk) = spval
-                 if (n_FY       (ns) /= 0) a2D(i,j,n_FY(ns),       iblk) = spval
+                 if (n_divu     (ns) /= 0) a2D(i,j,n_divu(ns),     iblk) = spval_dbl
+                 if (n_shear    (ns) /= 0) a2D(i,j,n_shear(ns),    iblk) = spval_dbl
+                 if (n_sig1     (ns) /= 0) a2D(i,j,n_sig1(ns),     iblk) = spval_dbl
+                 if (n_sig2     (ns) /= 0) a2D(i,j,n_sig2(ns),     iblk) = spval_dbl
+                 if (n_sigP     (ns) /= 0) a2D(i,j,n_sigP(ns),     iblk) = spval_dbl
+                 if (n_sistreave(ns) /= 0) a2D(i,j,n_sistreave(ns),iblk) = spval_dbl
+                 if (n_sistremax(ns) /= 0) a2D(i,j,n_sistremax(ns),iblk) = spval_dbl
+                 if (n_mlt_onset(ns) /= 0) a2D(i,j,n_mlt_onset(ns),iblk) = spval_dbl
+                 if (n_frz_onset(ns) /= 0) a2D(i,j,n_frz_onset(ns),iblk) = spval_dbl
+                 if (n_hisnap   (ns) /= 0) a2D(i,j,n_hisnap(ns),   iblk) = spval_dbl
+                 if (n_aisnap   (ns) /= 0) a2D(i,j,n_aisnap(ns),   iblk) = spval_dbl
+                 if (n_trsig    (ns) /= 0) a2D(i,j,n_trsig(ns),    iblk) = spval_dbl
+                 if (n_iage     (ns) /= 0) a2D(i,j,n_iage(ns),     iblk) = spval_dbl
+                 if (n_FY       (ns) /= 0) a2D(i,j,n_FY(ns),       iblk) = spval_dbl
 
-                 if (n_a11      (ns) /= 0) a2D(i,j,n_a11(ns),      iblk) = spval
-                 if (n_a12      (ns) /= 0) a2D(i,j,n_a12(ns),      iblk) = spval
-                 if (n_e11      (ns) /= 0) a2D(i,j,n_e11(ns),      iblk) = spval
-                 if (n_e12      (ns) /= 0) a2D(i,j,n_e12(ns),      iblk) = spval
-                 if (n_e22      (ns) /= 0) a2D(i,j,n_e22(ns),      iblk) = spval
-                 if (n_s11      (ns) /= 0) a2D(i,j,n_s11(ns),      iblk) = spval
-                 if (n_s12      (ns) /= 0) a2D(i,j,n_s12(ns),      iblk) = spval
-                 if (n_s22      (ns) /= 0) a2D(i,j,n_s22(ns),      iblk) = spval
-                 if (n_yieldstress11 (ns) /= 0) a2D(i,j,n_yieldstress11(ns),iblk) = spval
-                 if (n_yieldstress12 (ns) /= 0) a2D(i,j,n_yieldstress12(ns),iblk) = spval
-                 if (n_yieldstress22 (ns) /= 0) a2D(i,j,n_yieldstress22(ns),iblk) = spval
+                 if (n_a11      (ns) /= 0) a2D(i,j,n_a11(ns),      iblk) = spval_dbl
+                 if (n_a12      (ns) /= 0) a2D(i,j,n_a12(ns),      iblk) = spval_dbl
+                 if (n_e11      (ns) /= 0) a2D(i,j,n_e11(ns),      iblk) = spval_dbl
+                 if (n_e12      (ns) /= 0) a2D(i,j,n_e12(ns),      iblk) = spval_dbl
+                 if (n_e22      (ns) /= 0) a2D(i,j,n_e22(ns),      iblk) = spval_dbl
+                 if (n_s11      (ns) /= 0) a2D(i,j,n_s11(ns),      iblk) = spval_dbl
+                 if (n_s12      (ns) /= 0) a2D(i,j,n_s12(ns),      iblk) = spval_dbl
+                 if (n_s22      (ns) /= 0) a2D(i,j,n_s22(ns),      iblk) = spval_dbl
+                 if (n_yieldstress11 (ns) /= 0) a2D(i,j,n_yieldstress11(ns),iblk) = spval_dbl
+                 if (n_yieldstress12 (ns) /= 0) a2D(i,j,n_yieldstress12(ns),iblk) = spval_dbl
+                 if (n_yieldstress22 (ns) /= 0) a2D(i,j,n_yieldstress22(ns),iblk) = spval_dbl
               else
                  if (n_divu     (ns) /= 0) a2D(i,j,n_divu(ns),iblk)      = &
                        divu (i,j,iblk)*avail_hist_fields(n_divu(ns))%cona
