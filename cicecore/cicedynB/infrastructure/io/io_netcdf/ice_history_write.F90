@@ -371,7 +371,7 @@
       var_grd(n_dye)%coordinates = 'ELON ELAT'
 
       var_grd(n_HTN)%req = coord_attributes('HTN', &
-                  'T cell width on North side','m')
+                  'T cell width on North side', 'm')
       var_grd(n_HTN)%coordinates = 'TLON TLAT'
       var_grd(n_HTE)%req = coord_attributes('HTE', &
                   'T cell width on East side', 'm')

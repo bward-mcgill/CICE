@@ -3090,7 +3090,8 @@
          elseif (trim(ice_data_type) == 'wim2p5') then
             ! ice in 50% of domain, not at edges
             icells = 0
-            iedge = int(real(nx_global,kind=dbl_kind) * 0.20) + 1
+!Test bward
+            iedge = int(real(nx_global,kind=dbl_kind) * 0.2) + 1
             jedge = int(real(ny_global,kind=dbl_kind) * 0) + 1
             do j = jlo, jhi
             do i = ilo, ihi

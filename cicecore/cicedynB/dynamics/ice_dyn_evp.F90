@@ -369,8 +369,6 @@
                               field_loc_center, field_type_vector)
          call grid_average_X2Y('F', strairxT, 'T', strairx, 'U')
          call grid_average_X2Y('F', strairyT, 'T', strairy, 'U')
-         write(*,*) "strairy = ", SUM(strairy(:,:,:))
-         write(*,*) "strairx =", SUM(strairx(:,:,:))
       endif
 
       if (grid_ice == 'CD' .or. grid_ice == 'C') then

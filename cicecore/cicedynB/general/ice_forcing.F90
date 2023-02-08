@@ -5395,15 +5395,17 @@
 !Version to test WRS (bward)
 
       do iblk = 1, nblocks
-         do j = 20,80
-         do i = 0,63 
+        do j = 20,80
+!         do i = 0,63 
+!         do j = 1, ny_block   
+        do i = 1, nx_block 
 
          this_block = get_block(blocks_ice(iblk),iblk)
          iglob = this_block%i_glob
          jglob = this_block%j_glob
 
          ! wind components
-         uatm(i,j,iblk) = c5
+         uatm(i,j,iblk) = c5 * 4
          vatm(i,j,iblk) = c0
 
          ! wind stress
@@ -6145,7 +6147,6 @@
          ! efreq   (wave spectrum, energy as a function of wave frequency UNITS)
          !-------------------------------------------------------------------
          call ice_open_nc(spec_file,ncid)
-
          call ice_read_nc_xyf(ncid,recnum,'efreq',wave_spectrum_data(:,:,:,1,:),debug_n_d, &
               field_loc=field_loc_center, &
               field_type=field_type_scalar)

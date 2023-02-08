@@ -235,8 +235,10 @@
       if (tr_fsd .and. wave_spec) call icepack_init_spwf_fullnet
       if (tr_fsd .and. wave_spec) call icepack_init_spwf_class
 
-      !if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
-      if (tr_fsd .and. wave_spec) call wave_spec_data ! wave spectrum in ice
+      if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
+      
+      ! Not sure about that bward
+      !if (tr_fsd .and. wave_spec) call wave_spec_data ! wave spectrum in ice
 
       ! isotopes
       if (tr_iso)     call fiso_default                 ! default values

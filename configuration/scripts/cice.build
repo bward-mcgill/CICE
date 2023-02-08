@@ -237,4 +237,3 @@ if ( ${ICE_TEST} != ${ICE_SPVAL} ) then
   echo "PASS ${ICE_TESTNAME} build" >> ${ICE_CASEDIR}/test_output
   echo "PEND ${ICE_TESTNAME} run" >> ${ICE_CASEDIR}/test_output
 endif
-

@@ -416,7 +416,7 @@
             endif
          end do
          end do
-         call accum_hist_field(n_fsdrad, iblk, worka(:,:), a2D)
+         call accum_hist_field(n_fsdrad, iblk, worka(:,:) * c2, a2D)
       endif
 
       if (f_fsdperim(1:1) /= 'x') then

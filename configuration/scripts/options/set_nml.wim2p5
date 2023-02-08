@@ -39,4 +39,5 @@ histfreq_n     =  1 , 1 , 1 , 1 , 1
 f_aice      = 'h' 
 f_hi     = 'h'
 f_fsdrad      = 'h'
-
+f_strwvx      = 'h'
+f_strwvy      = 'h'

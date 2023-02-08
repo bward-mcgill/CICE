@@ -98,8 +98,8 @@
          if (add_strwave .and. wave_spec) then
              call get_wrs
          endif
-!         if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
-         if (tr_fsd .and. wave_spec) call wave_spec_data ! wave spectrum in ice
+         if (tr_fsd .and. wave_spec) call get_wave_spec ! wave spectrum in ice
+!         if (tr_fsd .and. wave_spec) call wave_spec_data ! wave spectrum in ice
          call get_forcing_atmo     ! atmospheric forcing from data
          call get_forcing_ocn(dt)  ! ocean forcing from data
  
