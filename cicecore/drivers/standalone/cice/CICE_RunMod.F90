@@ -83,7 +83,7 @@
 
          call ice_step
 ! tcraig, use advance_timestep now
-         istep  = istep  + 1    ! update time step counters
+!         istep  = istep  + 1    ! update time step counters
 !         istep1 = istep1 + 1
 !         time = time + dt       ! determine the time and date
 !         call calendar(time)    ! at the end of the timestep

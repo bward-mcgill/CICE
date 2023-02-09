@@ -215,11 +215,11 @@
       use ice_domain, only: nblocks, blocks_ice, halo_info, maskhalo_dyn
       use ice_domain_size, only: max_blocks, ncat, nx_global, ny_global
       use ice_flux, only: rdg_conv, rdg_shear, strairxT, strairyT, &
-          strairxU, strairyU, uocn, vocn, ss_tltx, ss_tlty, iceumask, fmU, &
+          strairxU, strairyU, uocn, vocn, ss_tltx, ss_tlty, fmU, &
           strtltxU, strtltyU, strocnxU, strocnyU, strintxU, strintyU, taubxU, taubyU, &
-          strocnxT, strocnyT, strax, stray, strwavex, strwavey, &
+          strax, stray, strwavex, strwavey, &
           Tbu, hwater, &
-          strairxN, strairyN, icenmask, fmN, &
+          strairxN, strairyN, fmN, &
           strtltxN, strtltyN, strocnxN, strocnyN, strintxN, strintyN, taubxN, taubyN, &
           TbN, &
           strairxE, strairyE, fmE, &
@@ -289,7 +289,6 @@
          wavey    , & ! Wave radiation stress, y (m2/s2)
          forcex   , & ! work array: combined atm stress and ocn tilt, x
          forcey   , & ! work array: combined atm stress and ocn tilt, y
-         aiu      , & ! ice fraction on u-grid
          umass    , & ! total mass of ice and snow (u grid)
          umassdti     ! mass of U-cell/dte (kg/m^2 s)
 
@@ -325,11 +324,6 @@
          aiE      , & ! ice fraction on E-grid
          emass    , & ! total mass of ice and snow (E grid)
          emassdti     ! mass of E-cell/dte (kg/m^2 s)
-
-      real (kind=dbl_kind), allocatable :: &
-         fld2(:,:,:,:) , & ! 2 bundled fields
-         fld3(:,:,:,:) , & ! 3 bundled fields
-         fld4(:,:,:,:)     ! 4 bundled fields
 
       real (kind=dbl_kind), allocatable :: &
          strengthU(:,:,:), & ! strength averaged to U points
@@ -537,9 +531,9 @@
              strairxE = strairyE + waveyE
           endif
       endif
-
-      !$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,ij,i,j) SCHEDULE(runtime)
-      do iblk = 1, nblocks
+      if (trim(grid_ice) == 'B') then
+      	!$OMP PARALLEL DO PRIVATE(iblk,ilo,ihi,jlo,jhi,this_block,ij,i,j) SCHEDULE(runtime)
+      	do iblk = 1, nblocks
 
             !-----------------------------------------------------------------
             ! more preparation for dynamics

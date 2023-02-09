@@ -412,8 +412,12 @@
          f_vvelN = f_vvel
          f_icespdN = f_icespd
          f_icedirN = f_icedir
+         f_strwvxN = f_strwvx
+         f_strwvyN = f_strwvy
          f_strairxN = f_strairx
          f_strairyN = f_strairy
+         f_strwvxE = f_strwvx
+         f_strwvyE = f_strwvy
          f_strairxE = f_strairx
          f_strairyE = f_strairy
          f_strocnxN = f_strocnx
@@ -558,6 +562,8 @@
       call broadcast_scalar (f_fhocn_ai, master_task)
       call broadcast_scalar (f_fswthru, master_task)
       call broadcast_scalar (f_fswthru_ai, master_task)
+      call broadcast_scalar (f_strwvx, master_task) !test bward
+      call broadcast_scalar (f_strwvy, master_task)
       call broadcast_scalar (f_strairx, master_task)
       call broadcast_scalar (f_strairy, master_task)
       call broadcast_scalar (f_strtltx, master_task)
@@ -570,6 +576,8 @@
       call broadcast_scalar (f_strinty, master_task)
       call broadcast_scalar (f_taubx, master_task)
       call broadcast_scalar (f_tauby, master_task)
+      call broadcast_scalar (f_strwvxN, master_task)
+      call broadcast_scalar (f_strwvyN, master_task)
       call broadcast_scalar (f_strairxN, master_task)
       call broadcast_scalar (f_strairyN, master_task)
       call broadcast_scalar (f_strtltxN, master_task)
@@ -582,6 +590,8 @@
       call broadcast_scalar (f_strintyN, master_task)
       call broadcast_scalar (f_taubxN, master_task)
       call broadcast_scalar (f_taubyN, master_task)
+      call broadcast_scalar (f_strwvxE, master_task)
+      call broadcast_scalar (f_strwvyE, master_task)
       call broadcast_scalar (f_strairxE, master_task)
       call broadcast_scalar (f_strairyE, master_task)
       call broadcast_scalar (f_strtltxE, master_task)
@@ -1125,6 +1135,16 @@
              "weighted by ice area", c1, c0,                                  &
              ns1, f_fswthru_ai)
 
+         call define_hist_field(n_strwvx,"strwvx","N/m^2",ustr2D, ucstr, &
+             "wave/ice stress (x)",                                       &
+             "positive is x direction on U grid", c1, c0,                &
+             ns1, f_strwvx)
+
+         call define_hist_field(n_strwvy,"strwvy","N/m^2",ustr2D, ucstr, &
+             "wave/ice stress (y)",                                       &
+             "positive is y direction on U grid", c1, c0,                &
+             ns1, f_strwvy)
+
          call define_hist_field(n_strairx,"strairx","N/m^2",ustr2D, ucstr, &
              "atm/ice stress (x)",                                       &
              "positive is x direction on U grid", c1, c0,                &
@@ -1185,6 +1205,16 @@
              "positive is y direction on U grid", c1, c0,                &
              ns1, f_tauby)
 
+       call define_hist_field(n_strwvxN,"strwvxN","N/m^2",nstr2D, ncstr, &
+             "wave/ice stress (x)",                                       &
+             "positive is x direction on N grid", c1, c0,                &
+             ns1, f_strwvxN)
+
+         call define_hist_field(n_strwvyN,"strwvyN","N/m^2",nstr2D, ncstr, &
+             "wave/ice stress (y)",                                       &
+             "positive is y direction on N grid", c1, c0,                &
+             ns1, f_strwvyN)
+
          call define_hist_field(n_strairxN,"strairxN","N/m^2",nstr2D, ncstr, &
              "atm/ice stress (x)",                                       &
              "positive is x direction on N grid", c1, c0,                &
@@ -1204,6 +1234,16 @@
              "atm/ice stress (y)",                                       &
              "positive is y direction on E grid", c1, c0,                &
              ns1, f_strairyE)
+
+         call define_hist_field(n_strwvxE,"strwvxE","N/m^2",estr2D, ecstr, &
+             "wave/ice stress (x)",                                       &
+             "positive is x direction on E grid", c1, c0,                &
+             ns1, f_strwvxE)
+
+         call define_hist_field(n_strwvyE,"strwvyE","N/m^2",estr2D, ecstr, &
+             "wave/ice stress (y)",                                       &
+             "positive is y direction on E grid", c1, c0,                &
+             ns1, f_strwvyE)
 
          call define_hist_field(n_strtltxN,"strtltxN","N/m^2",nstr2D, ncstr, &
              "sea sfc tilt stress (x)",                                  &
@@ -2123,7 +2163,7 @@
           Tair, Tref, Qref, congel, frazil, frazil_diag, snoice, dsnow, &
           melts, meltb, meltt, meltl, fresh, fsalt, fresh_ai, fsalt_ai, &
           fhocn, fhocn_ai, uatm, vatm, fbot, Tbot, Tsnice, fswthru_ai, &
-          strairxU, strairyU, strtltxU, strtltyU, strintxU, strintyU, &
+          strairxU, strairyU, strwavex, strwavey, strtltxU, strtltyU, strintxU, strintyU, &
           taubxU, taubyU, strocnxU, strocnyU, &
           strairxN, strairyN, strtltxN, strtltyN, strintxN, strintyN, &
           taubxN, taubyN, strocnxN, strocnyN, &
@@ -2547,7 +2587,10 @@
              call accum_hist_field(n_fswthru, iblk, fswthru(:,:,iblk), a2D)
          if (f_fswthru_ai(1:1)/= 'x') &
              call accum_hist_field(n_fswthru_ai,iblk, fswthru_ai(:,:,iblk), a2D)
-
+         if (f_strwvx(1:1) /= 'x') &
+             call accum_hist_field(n_strwvx, iblk, strwavex(:,:,iblk)*rhow, a2D)
+         if (f_strwvy(1:1) /= 'x') &
+             call accum_hist_field(n_strwvy, iblk, strwavey(:,:,iblk)*rhow, a2D)
          if (f_strairx(1:1) /= 'x') &
              call accum_hist_field(n_strairx, iblk, strairxU(:,:,iblk), a2D)
          if (f_strairy(1:1) /= 'x') &
@@ -2572,6 +2615,14 @@
              call accum_hist_field(n_taubx, iblk, taubxU(:,:,iblk), a2D)
          if (f_tauby(1:1) /= 'x') &
              call accum_hist_field(n_tauby, iblk, taubyU(:,:,iblk), a2D)
+         if (f_strwvxN(1:1) /= 'x') &
+             call accum_hist_field(n_strwvxN, iblk, strwavex(:,:,iblk)*rhow, a2D)
+         if (f_strwvyN(1:1) /= 'x') &
+             call accum_hist_field(n_strwvyN, iblk, strwavey(:,:,iblk)*rhow, a2D)
+         if (f_strwvxE(1:1) /= 'x') &
+             call accum_hist_field(n_strwvxE, iblk, strwavex(:,:,iblk)*rhow, a2D)
+         if (f_strwvyE(1:1) /= 'x') &
+             call accum_hist_field(n_strwvyE, iblk, strwavey(:,:,iblk)*rhow, a2D)
          if (f_strairxN(1:1) /= 'x') &
              call accum_hist_field(n_strairxN, iblk, strairxN(:,:,iblk), a2D)
          if (f_strairyN(1:1) /= 'x') &
