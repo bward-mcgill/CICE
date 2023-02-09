@@ -92,8 +92,7 @@ dynamics into CICE is described in detail in
 
 The VP solver implementation mostly follows :cite:`Lemieux08`, with
 FGMRES :cite:`Saad93` as the linear solver and GMRES as the preconditioner.
-Note that the VP solver has not yet been tested on the ``tx1`` grid or with
-threading enabled.
+Note that the VP solver has not yet been tested on the ``tx1`` grid.
 
 The EVP, rEVP, EAP and VP approaches are all available with the B grid. However, at the moment, only the EVP and rEVP schemes are possible with the C grid.
 
@@ -383,7 +382,7 @@ The value of :math:`k_1` can be changed at runtime using the namelist variable `
 
 This more sophisticated grounding parameterization computes the seabed stress based
 on the probability of contact between the ice thickness distribution
-(ITD) and the seabed. Multi-thickness category models such as CICE typically use a
+(ITD) and the seabed :cite:`Dupont22`. Multi-thickness category models such as CICE typically use a
 few thickness categories (5-10). This crude representation of the ITD
 does not resolve the tail of the ITD, which is crucial for grounding
 events.

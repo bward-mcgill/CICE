@@ -11,43 +11,7 @@ endif
 
 set jobfile = $1
 
-set ntasks = ${ICE_NTASKS}
-set nthrds = ${ICE_NTHRDS}
-set maxtpn = ${ICE_MACHINE_TPNODE}
-set acct   = ${ICE_ACCOUNT}
-
-@ ncores = ${ntasks} * ${nthrds}
-@ taskpernode = ${maxtpn} / $nthrds
-if (${taskpernode} == 0) set taskpernode = 1
-@ nnodes = ${ntasks} / ${taskpernode}
-if (${nnodes} * ${taskpernode} < ${ntasks}) @ nnodes = $nnodes + 1
-set taskpernodelimit = ${taskpernode}
-if (${taskpernodelimit} > ${ntasks}) set taskpernodelimit = ${ntasks}
-@ corespernode = ${taskpernodelimit} * ${nthrds}
-
-set ptile = $taskpernode
-if ($ptile > ${maxtpn} / 2) @ ptile = ${maxtpn} / 2
-
-set runlength = ${ICE_RUNLENGTH}
-if ($?ICE_MACHINE_MAXRUNLENGTH) then
-  if (${runlength} > ${ICE_MACHINE_MAXRUNLENGTH}) then
-    set runlength = ${ICE_MACHINE_MAXRUNLENGTH}
-  endif
-endif
-
-set queue = "${ICE_QUEUE}"
-set batchtime = "00:15:00"
-if (${runlength} == 0) set batchtime = "00:29:00"
-if (${runlength} == 1) set batchtime = "00:59:00"
-if (${runlength} == 2) set batchtime = "2:00:00"
-if (${runlength} == 3) set batchtime = "3:00:00"
-if (${runlength} == 4) set batchtime = "4:00:00"
-if (${runlength} == 5) set batchtime = "5:00:00"
-if (${runlength} == 6) set batchtime = "6:00:00"
-if (${runlength} == 7) set batchtime = "7:00:00"
-if (${runlength} >= 8) set batchtime = "8:00:00"
-
-set shortcase = `echo ${ICE_CASENAME} | cut -c1-15`
+source ${ICE_SCRIPTS}/setup_machparams.csh
 
 #==========================================
 
@@ -67,6 +31,19 @@ cat >> ${jobfile} << EOFB
 #PBS -A ${acct}
 #PBS -l select=${nnodes}:ncpus=${corespernode}:mpiprocs=${taskpernodelimit}:ompthreads=${nthrds}
 #PBS -l walltime=${batchtime}
+EOFB
+
+else if (${ICE_MACHINE} =~ gust*) then
+cat >> ${jobfile} << EOFB
+#PBS -q ${queue}
+#PBS -l job_priority=regular
+#PBS -N ${ICE_CASENAME}
+#PBS -A ${acct}
+#PBS -l select=${nnodes}:ncpus=${corespernode}:mpiprocs=${taskpernodelimit}:ompthreads=${nthrds}
+#PBS -l walltime=${batchtime}
+#PBS -j oe 
+#PBS -W umask=022
+#PBS -o ${ICE_CASEDIR}
 EOFB
 
 else if (${ICE_MACHINE} =~ hobart*) then
@@ -126,8 +103,8 @@ else if (${ICE_MACHINE} =~ nrlssc*) then
 # nrlssc queue system has nodes with different task per node
 if (${taskpernode} <= 12) set tpnstr = 'twelve'
 if (${taskpernode} == 20) set tpnstr = 'twenty'
-if (${taskpernode} == 24) set tpnstr = 'twentyfour'
-if (${taskpernode} == 28) set tpnstr = 'twentyeight'
+if (${taskpernode} >= 24) set tpnstr = 'twentyfour'
+#if (${taskpernode} == 28) set tpnstr = 'twentyeight'
 
 cat >> ${jobfile} <<EOFB
 #PBS -N ${shortcase}
@@ -298,7 +275,7 @@ cat >> ${jobfile} << EOFB
 #SBATCH --nodes ${nnodes}
 #SBATCH --ntasks ${ntasks}
 #SBATCH --cpus-per-task ${nthrds}
-#SBATCH --mem-per-cpu=5G
+#SBATCH --mem-per-cpu=${batchmem}G
 #SBATCH --comment="image=eccc/eccc_all_default_ubuntu-18.04-amd64_latest"
 EOFB
 

@@ -28,7 +28,8 @@
       implicit none
       private
       public :: init_fileunits, get_fileunit, flush_fileunit, &
-                release_fileunit, release_all_fileunits
+                release_fileunit, release_all_fileunits, &
+                goto_nml
 
       character (len=char_len), public :: &
          diag_type               ! 'stdout' or 'file'
@@ -84,7 +85,7 @@
          nu_diag_set = .false. ! flag to indicate whether nu_diag is already set
 
       integer (kind=int_kind), public :: &
-         ice_IOUnitsMinUnit = 11, & ! do not use unit numbers below 
+         ice_IOUnitsMinUnit = 11, & ! do not use unit numbers below
          ice_IOUnitsMaxUnit = 99    ! or above, set by setup_nml
 
       logical (kind=log_kind), dimension(:), allocatable :: &
@@ -101,8 +102,8 @@
 
 !=======================================================================
 
-!  This routine grabs needed unit numbers. 
-!  nu_diag is set to 6 (stdout) but may be reset later by the namelist. 
+!  This routine grabs needed unit numbers.
+!  nu_diag is set to 6 (stdout) but may be reset later by the namelist.
 !  nu_nml is obtained separately.
 
       subroutine init_fileunits
@@ -116,7 +117,11 @@
          ice_IOUnitsInUse(ice_stdout) = .true. ! reserve unit 6
          ice_IOUnitsInUse(ice_stderr) = .true.
          if (nu_diag >= 1 .and. nu_diag <= ice_IOUnitsMaxUnit) &
-            ice_IOUnitsInUse(nu_diag) = .true. ! reserve unit nu_diag
+              ice_IOUnitsInUse(nu_diag) = .true. ! reserve unit nu_diag
+#ifdef CESMCOUPLED
+         ! CESM can have negative unit numbers.
+         if (nu_diag < 0) nu_diag_set = .true.
+#endif
 
          call get_fileunit(nu_grid)
          call get_fileunit(nu_kmt)
@@ -203,7 +208,7 @@
 
 !=======================================================================
 
-!  This routine releases unit numbers at the end of a run. 
+!  This routine releases unit numbers at the end of a run.
 
       subroutine release_all_fileunits
 
@@ -239,7 +244,12 @@
          call release_fileunit(nu_rst_pointer)
          call release_fileunit(nu_history)
          call release_fileunit(nu_hdr)
+#ifdef CESMCOUPLED
+         ! CESM can have negative unit numbers
+         if (nu_diag > 0 .and. nu_diag /= ice_stdout) call release_fileunit(nu_diag)
+#else
          if (nu_diag /= ice_stdout) call release_fileunit(nu_diag)
+#endif
 
       end subroutine release_all_fileunits
 
@@ -310,6 +320,56 @@
 #endif
 
       end subroutine flush_fileunit
+
+!=======================================================================
+
+!=======================================================
+
+      subroutine goto_nml(iunit, nml, status)
+        ! Search to namelist group within ice_in file.
+        ! for compilers that do not allow optional namelists
+        
+        ! passed variables
+        integer(kind=int_kind), intent(in) :: &
+             iunit ! namelist file unit
+        
+        character(len=*), intent(in) :: &
+             nml ! namelist to search for
+        
+        integer(kind=int_kind), intent(out) :: &
+             status ! status of subrouine
+        
+        ! local variables
+        character(len=char_len) :: &
+             file_str, & ! string in file
+             nml_str     ! namelist string to test
+        
+        integer(kind=int_kind) :: &
+             i, n ! dummy integers
+        
+        
+        ! rewind file
+        rewind(iunit)
+        
+        ! define test string with ampersand
+        nml_str = '&' // trim(adjustl(nml))
+                
+        ! search for the record containing the namelist group we're looking for
+        do
+           read(iunit, '(a)', iostat=status) file_str
+           if (status /= 0) then
+              exit ! e.g. end of file
+           else
+              if (index(adjustl(file_str), nml_str) == 1) then
+                 exit ! i.e. found record we're looking for
+              end if
+           end if
+        end do
+        
+        ! backspace to namelist name in file
+        backspace(iunit)
+        
+      end subroutine goto_nml
 
 !=======================================================================
 

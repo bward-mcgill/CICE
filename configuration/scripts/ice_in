@@ -75,6 +75,11 @@
     kcatbound    = 0
     dxrect         = 30.e5
     dyrect         = 30.e5
+    lonrefrect    = -156.50d0
+    latrefrect    =   71.35d0
+    scale_dxdy     = .false.
+    dxscale        = 1.d0
+    dyscale        = 1.d0
     close_boundaries = .false.
     ncat         = 5
     nfsd         = 1
@@ -100,8 +105,6 @@
     restart_FY   = .false.
     tr_lvl       = .true.
     restart_lvl  = .false.
-    tr_pond_cesm = .false.
-    restart_pond_cesm = .false.
     tr_pond_topo = .false.
     restart_pond_topo = .false.
     tr_pond_lvl  = .true.
@@ -149,7 +152,7 @@
     Ktens           = 0.
     e_yieldcurve    = 2.
     e_plasticpot    = 2.
-    visc_method     = 'avg_strength'
+    visc_method     = 'avg_zeta'
     elasticDamp     = 0.36d0
     deltaminEVP     = 1e-11
     deltaminVP      = 2e-9
@@ -164,7 +167,7 @@
     kridge          = 1
     ktransport      = 1
     ssh_stress      = 'geostrophic'
-    maxits_nonlin   = 4
+    maxits_nonlin   = 10
     precond         = 'pgmres'
     dim_fgmres       = 50
     dim_pgmres       = 5
@@ -175,7 +178,7 @@
     monitor_pgmres  = .false.
     ortho_type      = 'mgs'
     reltol_nonlin   = 1e-8
-    reltol_fgmres   = 1e-2
+    reltol_fgmres   = 1e-1
     reltol_pgmres   = 1e-6
     algo_nonlin     = 'picard'
     use_mean_vrel   = .true.
@@ -251,6 +254,8 @@
     update_ocn_f    = .false.
     l_mpond_fresh   = .false.
     tfrz_option     = 'mushy'
+    saltflux_option = 'constant'
+    ice_ref_salinity = 4.0
     oceanmixed_ice  = .true.
     wave_spec_type  = 'none'
     wave_spec_file  = 'unknown_wave_spec_file'
